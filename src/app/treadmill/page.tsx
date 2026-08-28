@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { treadmillSuggestion } from "@/lib/actions";
 import { startOfToday } from "@/lib/schedule";
 import { TreadmillTimer } from "@/components/treadmill-timer";
 
@@ -7,10 +8,13 @@ export const dynamic = "force-dynamic";
 export default async function TreadmillPage() {
   const start = startOfToday();
   const end = new Date(start.getTime() + 86400000);
-  const today = await db.treadmillSession.findFirst({
-    where: { date: { gte: start, lt: end } },
-    orderBy: { date: "desc" },
-  });
+  const [today, suggestion] = await Promise.all([
+    db.treadmillSession.findFirst({
+      where: { date: { gte: start, lt: end } },
+      orderBy: { date: "desc" },
+    }),
+    treadmillSuggestion(),
+  ]);
 
   return (
     <div className="space-y-8">
@@ -20,12 +24,18 @@ export default async function TreadmillPage() {
         </p>
         <h1 className="text-3xl font-semibold sm:text-4xl">Treadmill</h1>
         <p className="text-muted-foreground">
-          Dilakukan setiap hari, termasuk hari istirahat.
+          Atur incline / kecepatan / durasi sesukamu — atau ikuti saran progresif.
         </p>
       </header>
       <TreadmillTimer
+        suggestion={suggestion}
         todayFinished={!!today?.finishedAt}
-        todayMinutes={today?.finishedAt ? today.minutes : null}
+        todayPlan={
+          today
+            ? { incline: today.incline, speed: today.speed, minutes: today.minutes }
+            : null
+        }
+        todayDistanceKm={today?.distanceKm ?? null}
       />
     </div>
   );

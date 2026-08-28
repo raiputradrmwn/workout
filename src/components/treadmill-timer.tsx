@@ -1,13 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
-import { Pause, Play, RotateCcw } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { Lightbulb, Pause, Play, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { finishTreadmill, startTreadmill } from "@/lib/actions";
-import { TREADMILL_DEFAULT } from "@/lib/schedule";
 
-const TOTAL = TREADMILL_DEFAULT.minutes * 60;
+type Plan = { incline: number; speed: number; minutes: number };
 
 function ding() {
   try {
@@ -34,18 +33,48 @@ function ding() {
   }
 }
 
+const num = (v: string, fallback: number) => {
+  const n = Number(v);
+  return Number.isFinite(n) && n > 0 ? n : fallback;
+};
+
 export function TreadmillTimer({
+  suggestion,
   todayFinished,
-  todayMinutes,
+  todayPlan,
+  todayDistanceKm,
 }: {
+  suggestion: Plan & { note: string };
   todayFinished: boolean;
-  todayMinutes: number | null;
+  todayPlan: Plan | null;
+  todayDistanceKm: number | null;
 }) {
-  const [remaining, setRemaining] = useState(TOTAL);
+  const startPlan = todayPlan ?? {
+    incline: suggestion.incline,
+    speed: suggestion.speed,
+    minutes: suggestion.minutes,
+  };
+
+  const [incline, setIncline] = useState(String(startPlan.incline));
+  const [speed, setSpeed] = useState(String(startPlan.speed));
+  const [minutes, setMinutes] = useState(String(startPlan.minutes));
+  const [distance, setDistance] = useState(
+    todayDistanceKm != null ? String(todayDistanceKm) : "",
+  );
+
+  const targetMin = num(minutes, suggestion.minutes);
+  const total = Math.round(targetMin * 60);
+
+  const [remaining, setRemaining] = useState(total);
   const [running, setRunning] = useState(false);
   const [finished, setFinished] = useState(todayFinished);
   const idRef = useRef<string | null>(null);
   const [pending, startT] = useTransition();
+
+  // Kalau durasi diubah sebelum mulai, reset hitung mundur.
+  useEffect(() => {
+    if (!running && !finished) setRemaining(total);
+  }, [total, running, finished]);
 
   useEffect(() => {
     if (!running) return;
@@ -53,23 +82,34 @@ export function TreadmillTimer({
     return () => clearInterval(t);
   }, [running]);
 
+  const elapsedSec = total - remaining;
+  const autoDistance = useMemo(
+    () => (num(speed, suggestion.speed) * elapsedSec) / 3600,
+    [speed, elapsedSec, suggestion.speed],
+  );
+
   useEffect(() => {
     if (remaining === 0 && running) {
       setRunning(false);
       ding();
       if (navigator.vibrate) navigator.vibrate([300, 120, 300, 120, 300]);
-      save(TREADMILL_DEFAULT.minutes);
+      save(targetMin);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [remaining]);
 
   async function ensureId() {
-    if (!idRef.current) idRef.current = await startTreadmill();
+    if (!idRef.current)
+      idRef.current = await startTreadmill({
+        incline: num(incline, suggestion.incline),
+        speed: num(speed, suggestion.speed),
+        minutes: targetMin,
+      });
     return idRef.current;
   }
 
   function toggle() {
-    if (!running && remaining === TOTAL) {
+    if (!running && remaining === total) {
       startT(async () => {
         await ensureId();
         setRunning(true);
@@ -81,43 +121,96 @@ export function TreadmillTimer({
 
   function reset() {
     setRunning(false);
-    setRemaining(TOTAL);
+    setRemaining(total);
   }
 
   function save(min: number) {
     startT(async () => {
       const id = await ensureId();
-      await finishTreadmill(id, min);
+      const km =
+        distance.trim() !== ""
+          ? Number(distance)
+          : Math.round(((num(speed, suggestion.speed) * min * 60) / 3600) * 100) /
+            100;
+      await finishTreadmill(id, {
+        minutes: min,
+        distanceKm: Number.isFinite(km) ? km : null,
+      });
       setFinished(true);
-      toast.success(`Treadmill ${min} menit tersimpan.`);
+      toast.success(`Treadmill ${min} menit${km ? ` · ${km} km` : ""} tersimpan.`);
     });
   }
 
   const mm = Math.floor(remaining / 60);
   const ss = remaining % 60;
-  const pct = ((TOTAL - remaining) / TOTAL) * 100;
-  const elapsedMin = Math.max(1, Math.round((TOTAL - remaining) / 60));
+  const pct = total > 0 ? (elapsedSec / total) * 100 : 0;
+  const elapsedMin = Math.max(1, Math.round(elapsedSec / 60));
   const R = 45;
   const C = 2 * Math.PI * R;
+  const locked = running || finished;
+
+  const fields: [string, string, string, (v: string) => void, string][] = [
+    ["Incline", incline, "level", setIncline, "0.5"],
+    ["Speed", speed, "km/j", setSpeed, "0.1"],
+    ["Menit", minutes, "menit", setMinutes, "1"],
+  ];
+
+  const suggestionMatches =
+    num(incline, -1) === suggestion.incline &&
+    num(speed, -1) === suggestion.speed &&
+    num(minutes, -1) === suggestion.minutes;
 
   return (
-    <div className="card-shadow mx-auto max-w-md space-y-8 rounded-3xl border bg-card p-8">
+    <div className="card-shadow mx-auto max-w-md space-y-6 rounded-3xl border bg-card p-6 sm:p-8">
+      {/* Saran */}
+      <div className="rounded-2xl bg-accent/60 p-4">
+        <p className="flex items-center gap-2 text-sm font-medium text-accent-foreground">
+          <Lightbulb className="size-4" /> Saran hari ini
+        </p>
+        <p className="mt-1 text-sm text-accent-foreground/90">{suggestion.note}</p>
+        <div className="mt-2 flex items-center justify-between gap-2">
+          <span className="font-mono text-sm tabular-nums text-accent-foreground">
+            {suggestion.incline} · {suggestion.speed} km/j · {suggestion.minutes}′
+          </span>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={locked || suggestionMatches}
+            onClick={() => {
+              setIncline(String(suggestion.incline));
+              setSpeed(String(suggestion.speed));
+              setMinutes(String(suggestion.minutes));
+            }}
+          >
+            {suggestionMatches ? "Terpakai" : "Pakai saran"}
+          </Button>
+        </div>
+      </div>
+
+      {/* Setelan (bisa diubah) */}
       <div className="grid grid-cols-3 gap-3">
-        {[
-          ["Incline", TREADMILL_DEFAULT.incline],
-          ["Speed", TREADMILL_DEFAULT.speed],
-          ["Menit", TREADMILL_DEFAULT.minutes],
-        ].map(([k, v]) => (
-          <div key={k} className="rounded-2xl bg-muted/60 p-4 text-center">
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">
-              {k}
-            </p>
-            <p className="mt-1 text-2xl font-semibold tabular-nums">{v}</p>
-          </div>
+        {fields.map(([label, val, unit, set, step]) => (
+          <label key={label} className="block rounded-2xl bg-muted/60 p-3 text-center">
+            <span className="text-xs uppercase tracking-wide text-muted-foreground">
+              {label}
+            </span>
+            <input
+              type="number"
+              inputMode="decimal"
+              step={step}
+              min={0}
+              value={val}
+              disabled={locked}
+              onChange={(e) => set(e.target.value)}
+              className="mt-1 w-full bg-transparent text-center text-2xl font-semibold tabular-nums outline-none disabled:opacity-60"
+            />
+            <span className="text-[11px] text-muted-foreground">{unit}</span>
+          </label>
         ))}
       </div>
 
-      <div className="relative mx-auto grid aspect-square w-full max-w-[15rem] place-items-center">
+      {/* Timer ring */}
+      <div className="relative mx-auto grid aspect-square w-full max-w-[14rem] place-items-center">
         <svg className="absolute inset-0 -rotate-90" viewBox="0 0 100 100">
           <circle
             cx="50"
@@ -141,11 +234,30 @@ export function TreadmillTimer({
           <p className="text-5xl font-semibold tabular-nums">
             {mm}:{ss.toString().padStart(2, "0")}
           </p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {running ? "berjalan" : remaining === 0 ? "selesai" : "siap mulai"}
+          <p className="mt-1 text-sm text-muted-foreground tabular-nums">
+            {running
+              ? `≈ ${autoDistance.toFixed(2)} km`
+              : remaining === 0
+                ? "selesai"
+                : "siap mulai"}
           </p>
         </div>
       </div>
+
+      {/* Jarak */}
+      <label className="flex items-center justify-between gap-3 rounded-2xl bg-muted/60 p-3">
+        <span className="text-sm text-muted-foreground">Jarak (km)</span>
+        <input
+          type="number"
+          inputMode="decimal"
+          step="0.01"
+          min={0}
+          placeholder={autoDistance > 0 ? autoDistance.toFixed(2) : "otomatis"}
+          value={distance}
+          onChange={(e) => setDistance(e.target.value)}
+          className="w-28 rounded-lg border bg-background px-3 py-2 text-center text-base font-medium tabular-nums outline-none focus:border-ring focus:ring-2 focus:ring-ring/40"
+        />
+      </label>
 
       <div className="flex flex-col gap-2.5">
         <Button
@@ -155,7 +267,7 @@ export function TreadmillTimer({
           className="h-12 text-base"
         >
           {running ? <Pause className="size-5" /> : <Play className="size-5" />}
-          {running ? "Jeda" : remaining === TOTAL ? "Mulai" : "Lanjut"}
+          {running ? "Jeda" : remaining === total ? "Mulai" : "Lanjut"}
         </Button>
         <div className="grid grid-cols-2 gap-2.5">
           <Button
@@ -171,7 +283,7 @@ export function TreadmillTimer({
             size="lg"
             variant="secondary"
             onClick={() => save(elapsedMin)}
-            disabled={pending || remaining === TOTAL}
+            disabled={pending || elapsedSec === 0}
             className="h-11"
           >
             Selesai sekarang
@@ -181,8 +293,8 @@ export function TreadmillTimer({
 
       {finished && (
         <p className="rounded-xl bg-success/10 px-4 py-3 text-center text-sm font-medium text-success">
-          Treadmill hari ini sudah tercatat
-          {todayMinutes ? ` (${todayMinutes} menit)` : ""}. Boleh diulang.
+          Treadmill hari ini tercatat
+          {todayDistanceKm ? ` · ${todayDistanceKm} km` : ""}. Boleh diulang.
         </p>
       )}
     </div>

@@ -57,49 +57,129 @@ export async function finishSession(sessionId: string) {
   revalidatePath("/history", "page");
 }
 
-/** Set "done" terakhir per gerakan dari sesi SEBELUM hari ini (buat patokan beban). */
-export async function lastPerformance(exerciseId: string) {
+type PerfSet = { setNumber: number; weightKg: number | null; reps: number | null };
+
+/**
+ * Set "done" terakhir per gerakan dari sesi SEBELUM hari ini (buat patokan beban).
+ * Satu query untuk semua gerakan sekaligus — hemat round-trip ke DB.
+ */
+export async function lastPerformanceMany(
+  exerciseIds: string[],
+): Promise<Record<string, PerfSet[]>> {
+  if (exerciseIds.length === 0) return {};
   const start = startOfToday();
   const rows = await db.setLog.findMany({
     where: {
-      exerciseId,
+      exerciseId: { in: exerciseIds },
       done: true,
       session: { date: { lt: start } },
     },
     orderBy: { createdAt: "desc" },
-    take: 8,
-    include: { session: true },
+    select: {
+      exerciseId: true,
+      setNumber: true,
+      weightKg: true,
+      reps: true,
+      session: { select: { date: true } },
+    },
   });
-  if (rows.length === 0) return null;
-  const latestDate = rows[0].session.date.toDateString();
-  const sameDay = rows
-    .filter((r) => r.session.date.toDateString() === latestDate)
-    .sort((a, b) => a.setNumber - b.setNumber);
-  return sameDay.map((r) => ({
-    setNumber: r.setNumber,
-    weightKg: r.weightKg,
-    reps: r.reps,
-  }));
+
+  const out: Record<string, PerfSet[]> = {};
+  const latestDay: Record<string, string> = {};
+  for (const r of rows) {
+    const day = r.session.date.toDateString();
+    latestDay[r.exerciseId] ??= day;
+    if (latestDay[r.exerciseId] !== day) continue;
+    (out[r.exerciseId] ??= []).push({
+      setNumber: r.setNumber,
+      weightKg: r.weightKg,
+      reps: r.reps,
+    });
+  }
+  for (const k of Object.keys(out)) {
+    out[k].sort((a, b) => a.setNumber - b.setNumber);
+  }
+  return out;
 }
 
-export async function startTreadmill() {
+type TreadmillPlan = { incline: number; speed: number; minutes: number };
+
+export async function startTreadmill(plan?: Partial<TreadmillPlan>) {
   const start = startOfToday();
   const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
   const existing = await db.treadmillSession.findFirst({
     where: { date: { gte: start, lt: end } },
   });
-  if (existing) return existing.id;
-  const rec = await db.treadmillSession.create({ data: { ...TREADMILL_DEFAULT } });
+  if (existing) {
+    if (plan && !existing.finishedAt) {
+      await db.treadmillSession.update({
+        where: { id: existing.id },
+        data: {
+          incline: plan.incline ?? existing.incline,
+          speed: plan.speed ?? existing.speed,
+          minutes: plan.minutes ?? existing.minutes,
+        },
+      });
+    }
+    return existing.id;
+  }
+  const rec = await db.treadmillSession.create({
+    data: {
+      incline: plan?.incline ?? TREADMILL_DEFAULT.incline,
+      speed: plan?.speed ?? TREADMILL_DEFAULT.speed,
+      minutes: plan?.minutes ?? TREADMILL_DEFAULT.minutes,
+    },
+  });
   revalidatePath("/treadmill", "page");
   revalidatePath("/", "page");
   return rec.id;
 }
 
-export async function finishTreadmill(id: string, minutes: number) {
+export async function finishTreadmill(
+  id: string,
+  data: { minutes: number; distanceKm: number | null },
+) {
   await db.treadmillSession.update({
     where: { id },
-    data: { finishedAt: new Date(), minutes },
+    data: {
+      finishedAt: new Date(),
+      minutes: data.minutes,
+      distanceKm: data.distanceKm,
+    },
   });
   revalidatePath("/treadmill", "page");
   revalidatePath("/", "page");
+  revalidatePath("/history", "page");
+}
+
+/** Saran setelan treadmill berikutnya berdasarkan sesi yang sudah selesai. */
+export async function treadmillSuggestion(): Promise<
+  TreadmillPlan & { note: string }
+> {
+  const finished = await db.treadmillSession.count({
+    where: { finishedAt: { not: null } },
+  });
+  const last = await db.treadmillSession.findFirst({
+    where: { finishedAt: { not: null } },
+    orderBy: { date: "desc" },
+  });
+  const incline = last?.incline ?? TREADMILL_DEFAULT.incline;
+  let speed = last?.speed ?? TREADMILL_DEFAULT.speed;
+  let minutes = last?.minutes ?? TREADMILL_DEFAULT.minutes;
+  let note: string;
+
+  if (finished === 0) {
+    note =
+      "Mulai dari baseline dan selesaikan penuh: incline 15 · 3.5 km/j · 30 menit.";
+  } else if (finished % 6 === 0 && minutes < 45) {
+    minutes += 5;
+    note = `${finished} sesi selesai — naik level: tambah durasi jadi ${minutes} menit.`;
+  } else if (finished % 3 === 0 && speed < 6) {
+    speed = Math.round((speed + 0.2) * 10) / 10;
+    note = `${finished} sesi selesai — coba naikkan kecepatan ke ${speed} km/j.`;
+  } else {
+    const toNext = 3 - (finished % 3);
+    note = `Pertahankan setelan ini. ${toNext} sesi lagi menuju kenaikan berikutnya.`;
+  }
+  return { incline, speed, minutes, note };
 }

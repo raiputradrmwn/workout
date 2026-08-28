@@ -2,7 +2,14 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Check, ChevronDown, Info, Lightbulb, Save } from "lucide-react";
+import {
+  Check,
+  ChevronDown,
+  Info,
+  Lightbulb,
+  Save,
+  TimerReset,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { RestTimer } from "@/components/rest-timer";
@@ -154,6 +161,11 @@ export function SessionRunner({
             style={{ width: `${pct}%` }}
           />
         </div>
+        <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+          <TimerReset className="size-3.5" />
+          Tandai <Check className="inline size-3" /> tiap set — timer istirahat
+          jalan otomatis. Atau ketuk &ldquo;Istirahat&rdquo; di tiap gerakan.
+        </p>
       </div>
 
       {exercises.map((ex) => {
@@ -187,9 +199,19 @@ export function SessionRunner({
               </div>
 
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-                <span className="text-muted-foreground">
-                  Istirahat {ex.restSeconds}s
-                </span>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setRest({
+                      id: Date.now(),
+                      seconds: ex.restSeconds,
+                      label: ex.name,
+                    })
+                  }
+                  className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 font-medium text-foreground hover:bg-primary/10 hover:text-primary"
+                >
+                  <TimerReset className="size-3.5" /> Istirahat {ex.restSeconds}s
+                </button>
                 {lastText ? (
                   <span className="text-muted-foreground">
                     Terakhir:{" "}

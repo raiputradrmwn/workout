@@ -7,13 +7,13 @@ import {
   Timer,
 } from "lucide-react";
 import { db } from "@/lib/db";
+import { treadmillSuggestion } from "@/lib/actions";
 import {
   CATEGORY_LABEL,
   DAY_NAMES_ID,
   mondayIndex,
   startOfToday,
   todayDayKey,
-  TREADMILL_DEFAULT,
 } from "@/lib/schedule";
 import { buttonVariants } from "@/components/ui/button";
 
@@ -47,9 +47,13 @@ export default async function TodayPage() {
       })
     : null;
 
-  const treadmill = await db.treadmillSession.findFirst({
-    where: { date: { gte: start, lt: end } },
-  });
+  const [treadmill, tmSuggest] = await Promise.all([
+    db.treadmillSession.findFirst({ where: { date: { gte: start, lt: end } } }),
+    treadmillSuggestion(),
+  ]);
+  const tmPlan = treadmill
+    ? { incline: treadmill.incline, speed: treadmill.speed, minutes: treadmill.minutes }
+    : tmSuggest;
 
   const session = day?.sessions[0];
   const workoutDone = !!session?.finishedAt;
@@ -177,19 +181,24 @@ export default async function TodayPage() {
             )}
           </div>
 
-          <div className="grid grid-cols-3 gap-3 p-6">
-            {[
-              ["Incline", TREADMILL_DEFAULT.incline],
-              ["Speed", TREADMILL_DEFAULT.speed],
-              ["Menit", TREADMILL_DEFAULT.minutes],
-            ].map(([k, v]) => (
-              <div key={k} className="rounded-2xl bg-muted/60 p-4 text-center">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                  {k}
-                </p>
-                <p className="mt-1 text-2xl font-semibold tabular-nums">{v}</p>
-              </div>
-            ))}
+          <div className="space-y-3 p-6">
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                ["Incline", tmPlan.incline],
+                ["Speed", tmPlan.speed],
+                ["Menit", tmPlan.minutes],
+              ].map(([k, v]) => (
+                <div key={k} className="rounded-2xl bg-muted/60 p-4 text-center">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                    {k}
+                  </p>
+                  <p className="mt-1 text-2xl font-semibold tabular-nums">{v}</p>
+                </div>
+              ))}
+            </div>
+            {!treadmillDone && (
+              <p className="text-sm text-muted-foreground">{tmSuggest.note}</p>
+            )}
           </div>
 
           <div className="mt-auto p-6 pt-0">

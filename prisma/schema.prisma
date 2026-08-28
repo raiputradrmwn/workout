@@ -76,5 +76,6 @@ model TreadmillSession {
   incline    Float     @default(15)
   speed      Float     @default(3.5)
   minutes    Int       @default(30)
+  distanceKm Float?
   finishedAt DateTime?
 }

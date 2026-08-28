@@ -95,8 +95,9 @@ export default async function HistoryPage() {
                   <div className="min-w-0 flex-1">
                     <p className="font-medium">Treadmill</p>
                     <p className="text-sm text-muted-foreground">
-                      {fmt.format(t.date)} &middot; incline {t.incline}, speed{" "}
-                      {t.speed}
+                      {fmt.format(t.date)} &middot; incline {t.incline} &middot;{" "}
+                      {t.speed} km/j
+                      {t.distanceKm ? ` · ${t.distanceKm} km` : ""}
                     </p>
                   </div>
                   <span
