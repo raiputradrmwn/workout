@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Exercise {
+  id        String        @id @default(cuid())
+  name      String        @unique
+  category  String // PUSH | PULL | LEGS | CORE
+  equipment String // barbell | dumbbell | band | bodyweight | bench | pullup
+  muscles   String
+  cues      String
+  templates DayExercise[]
+  setLogs   SetLog[]
+}
+
+model WorkoutDay {
+  id        String           @id @default(cuid())
+  key       String           @unique // PUSH_A | PULL_A | LEGS_A | PUSH_B ...
+  label     String
+  category  String // PUSH | PULL | LEGS
+  order     Int
+  exercises DayExercise[]
+  sessions  WorkoutSession[]
+}
+
+model DayExercise {
+  id          String     @id @default(cuid())
+  dayId       String
+  day         WorkoutDay @relation(fields: [dayId], references: [id], onDelete: Cascade)
+  exerciseId  String
+  exercise    Exercise   @relation(fields: [exerciseId], references: [id])
+  order       Int
+  targetSets  Int
+  targetReps  String
+  restSeconds Int
+
+  @@unique([dayId, order])
+}
+
+model WorkoutSession {
+  id         String     @id @default(cuid())
+  date       DateTime   @default(now())
+  dayId      String
+  day        WorkoutDay @relation(fields: [dayId], references: [id])
+  finishedAt DateTime?
+  notes      String?
+  setLogs    SetLog[]
+}
+
+model SetLog {
+  id         String         @id @default(cuid())
+  sessionId  String
+  session    WorkoutSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  exerciseId String
+  exercise   Exercise       @relation(fields: [exerciseId], references: [id])
+  setNumber  Int
+  weightKg   Float?
+  reps       Int?
+  done       Boolean        @default(false)
+  createdAt  DateTime       @default(now())
+
+  @@unique([sessionId, exerciseId, setNumber])
+}
+
+model TreadmillSession {
+  id         String    @id @default(cuid())
+  date       DateTime  @default(now())
+  incline    Float     @default(15)
+  speed      Float     @default(3.5)
+  minutes    Int       @default(30)
+  finishedAt DateTime?
+}
