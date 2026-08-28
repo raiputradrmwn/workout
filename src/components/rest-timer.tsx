@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Pause, Play, Plus, X } from "lucide-react";
+import { Minus, Pause, Play, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 
 function chime(times = 2) {
@@ -111,10 +111,12 @@ export function RestTimer({
   }, [remaining, label]);
 
   const addTime = useCallback((sec: number) => {
-    firedRef.current = false;
-    setRemaining((r) => r + sec);
-    setTotal((t) => t + sec);
-    setRunning(true);
+    if (sec > 0) {
+      firedRef.current = false;
+      setRunning(true);
+    }
+    setRemaining((r) => Math.max(0, r + sec));
+    setTotal((t) => Math.max(1, t + sec));
   }, []);
 
   const mm = Math.floor(remaining / 60);
@@ -149,17 +151,27 @@ export function RestTimer({
             {over ? "✓ Istirahat selesai — lanjut!" : "Istirahat"}
           </p>
           {label && (
-            <p className="truncate text-sm text-muted-foreground">{label}</p>
+            <p className="hidden truncate text-sm text-muted-foreground min-[420px]:block">
+              {label}
+            </p>
           )}
         </div>
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1.5">
+          <button
+            onClick={() => addTime(-15)}
+            title="-15 detik"
+            className="inline-flex h-11 items-center gap-0.5 rounded-xl border border-input bg-background px-2.5 text-sm font-medium hover:bg-muted"
+          >
+            <Minus className="size-4" />
+            15
+          </button>
           <button
             onClick={() => addTime(15)}
             title="+15 detik"
-            className="inline-flex h-11 items-center gap-1 rounded-xl border border-input bg-background px-3 text-sm font-medium hover:bg-muted"
+            className="inline-flex h-11 items-center gap-0.5 rounded-xl border border-input bg-background px-2.5 text-sm font-medium hover:bg-muted"
           >
             <Plus className="size-4" />
-            15s
+            15
           </button>
           <button
             onClick={() => setRunning((r) => !r)}
