@@ -35,6 +35,9 @@ export function startOfToday(d = new Date()): Date {
 
 export const TREADMILL_DEFAULT = { incline: 15, speed: 3.5, minutes: 30 };
 
+/** Istirahat saat pindah ke gerakan berikutnya (detik). */
+export const BETWEEN_EXERCISE_REST = 150;
+
 export const CATEGORY_LABEL: Record<string, string> = {
   PUSH: "Push (Dorong)",
   PULL: "Pull (Tarik)",

@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { RestTimer } from "@/components/rest-timer";
 import { finishSession, upsertSet } from "@/lib/actions";
+import { BETWEEN_EXERCISE_REST } from "@/lib/schedule";
 
 type SetRef = { setNumber: number; weightKg: number | null; reps: number | null };
 
@@ -113,11 +114,22 @@ export function SessionRunner({
       });
     });
     if (nextDone) {
-      setRest({
-        id: Date.now(),
-        seconds: ex.restSeconds,
-        label: `${ex.name} · set ${setNumber}`,
-      });
+      const exIdx = exercises.findIndex((e) => e.exerciseId === ex.exerciseId);
+      const isLastSet = setNumber >= ex.targetSets;
+      const next = exercises[exIdx + 1];
+      if (isLastSet && next) {
+        setRest({
+          id: Date.now(),
+          seconds: Math.max(ex.restSeconds, BETWEEN_EXERCISE_REST),
+          label: `Selesai ${ex.name} — lanjut ke ${next.name}`,
+        });
+      } else {
+        setRest({
+          id: Date.now(),
+          seconds: ex.restSeconds,
+          label: `${ex.name} · set ${setNumber}`,
+        });
+      }
     }
   }
 
