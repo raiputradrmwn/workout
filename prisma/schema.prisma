@@ -34,10 +34,12 @@ model DayExercise {
   day         WorkoutDay @relation(fields: [dayId], references: [id], onDelete: Cascade)
   exerciseId  String
   exercise    Exercise   @relation(fields: [exerciseId], references: [id])
-  order       Int
-  targetSets  Int
-  targetReps  String
-  restSeconds Int
+  order         Int
+  targetSets    Int
+  targetReps    String
+  restSeconds   Int
+  suggestWeight Float?
+  suggestReps   Int?
 
   @@unique([dayId, order])
 }

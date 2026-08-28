@@ -183,7 +183,15 @@ const exercises = [
 ];
 
 // ---- Day templates ----------------------------------------------------------
-type TmplItem = [name: string, sets: number, reps: string, rest: number];
+// [nama, set, target reps, istirahat(dtk), saran berat(kg|null=bodyweight/band), saran reps]
+type TmplItem = [
+  name: string,
+  sets: number,
+  reps: string,
+  rest: number,
+  suggestWeight: number | null,
+  suggestReps: number,
+];
 
 const days: {
   key: string;
@@ -198,12 +206,12 @@ const days: {
     category: "PUSH",
     order: 1,
     items: [
-      ["Barbell Bench Press", 4, "6-8", 150],
-      ["Incline Dumbbell Press", 3, "8-12", 90],
-      ["Seated Dumbbell Shoulder Press", 3, "8-12", 90],
-      ["Dumbbell Lateral Raise", 3, "12-20", 60],
-      ["Overhead Dumbbell Triceps Extension", 3, "10-15", 60],
-      ["Band Triceps Pushdown", 2, "15-20", 45],
+      ["Barbell Bench Press", 4, "6-8", 150, 30, 8],
+      ["Incline Dumbbell Press", 3, "8-12", 90, 10, 10],
+      ["Seated Dumbbell Shoulder Press", 3, "8-12", 90, 8, 10],
+      ["Dumbbell Lateral Raise", 3, "12-20", 60, 5, 15],
+      ["Overhead Dumbbell Triceps Extension", 3, "10-15", 60, 8, 12],
+      ["Band Triceps Pushdown", 2, "15-20", 45, null, 18],
     ],
   },
   {
@@ -212,11 +220,11 @@ const days: {
     category: "PULL",
     order: 2,
     items: [
-      ["Pull-up", 4, "maks (AMRAP)", 150],
-      ["Barbell Bent-over Row", 4, "8-10", 120],
-      ["One-arm Dumbbell Row", 3, "10-12", 90],
-      ["Dumbbell Biceps Curl", 3, "10-15", 60],
-      ["Band Face Pull", 3, "15-20", 45],
+      ["Pull-up", 4, "maks (AMRAP)", 150, null, 5],
+      ["Barbell Bent-over Row", 4, "8-10", 120, 30, 9],
+      ["One-arm Dumbbell Row", 3, "10-12", 90, 12, 11],
+      ["Dumbbell Biceps Curl", 3, "10-15", 60, 8, 12],
+      ["Band Face Pull", 3, "15-20", 45, null, 18],
     ],
   },
   {
@@ -225,11 +233,11 @@ const days: {
     category: "LEGS",
     order: 3,
     items: [
-      ["Goblet Squat", 4, "10-15", 90],
-      ["Romanian Deadlift", 4, "8-12", 120],
-      ["Bulgarian Split Squat", 3, "10-12 / kaki", 90],
-      ["Barbell Hip Thrust", 3, "12-15", 75],
-      ["Standing Calf Raise", 4, "15-20", 45],
+      ["Goblet Squat", 4, "10-15", 90, 12, 12],
+      ["Romanian Deadlift", 4, "8-12", 120, 30, 10],
+      ["Bulgarian Split Squat", 3, "10-12 / kaki", 90, 8, 11],
+      ["Barbell Hip Thrust", 3, "12-15", 75, 30, 13],
+      ["Standing Calf Raise", 4, "15-20", 45, 12, 18],
     ],
   },
   {
@@ -238,12 +246,12 @@ const days: {
     category: "PUSH",
     order: 4,
     items: [
-      ["Incline Barbell Bench Press", 4, "6-8", 150],
-      ["Seated Dumbbell Shoulder Press", 3, "8-12", 90],
-      ["Feet-Elevated Push-up", 3, "maks (AMRAP)", 90],
-      ["Dumbbell Lateral Raise", 4, "12-20", 60],
-      ["Band Triceps Pushdown", 3, "15-20", 45],
-      ["Overhead Dumbbell Triceps Extension", 2, "10-15", 60],
+      ["Incline Barbell Bench Press", 4, "6-8", 150, 25, 8],
+      ["Seated Dumbbell Shoulder Press", 3, "8-12", 90, 8, 10],
+      ["Feet-Elevated Push-up", 3, "maks (AMRAP)", 90, null, 12],
+      ["Dumbbell Lateral Raise", 4, "12-20", 60, 5, 15],
+      ["Band Triceps Pushdown", 3, "15-20", 45, null, 18],
+      ["Overhead Dumbbell Triceps Extension", 2, "10-15", 60, 8, 12],
     ],
   },
   {
@@ -252,12 +260,12 @@ const days: {
     category: "PULL",
     order: 5,
     items: [
-      ["Band-Assisted / Negative Pull-up", 4, "6-10", 150],
-      ["One-arm Dumbbell Row", 4, "10-12", 90],
-      ["Band Row", 3, "12-15", 75],
-      ["Dumbbell Biceps Curl", 3, "10-15", 60],
-      ["Band Face Pull", 3, "15-20", 45],
-      ["Hanging Knee Raise", 3, "10-15", 60],
+      ["Band-Assisted / Negative Pull-up", 4, "6-10", 150, null, 8],
+      ["One-arm Dumbbell Row", 4, "10-12", 90, 12, 11],
+      ["Band Row", 3, "12-15", 75, null, 13],
+      ["Dumbbell Biceps Curl", 3, "10-15", 60, 8, 12],
+      ["Band Face Pull", 3, "15-20", 45, null, 18],
+      ["Hanging Knee Raise", 3, "10-15", 60, null, 12],
     ],
   },
   {
@@ -266,12 +274,12 @@ const days: {
     category: "LEGS",
     order: 6,
     items: [
-      ["Barbell Back Squat", 4, "6-10", 150],
-      ["Dumbbell Reverse Lunge", 3, "10-12 / kaki", 90],
-      ["Romanian Deadlift", 3, "10-12", 120],
-      ["Barbell Hip Thrust", 3, "12-15", 75],
-      ["Standing Calf Raise", 4, "15-20", 45],
-      ["Plank", 3, "40-60 dtk", 45],
+      ["Barbell Back Squat", 4, "6-10", 150, 30, 8],
+      ["Dumbbell Reverse Lunge", 3, "10-12 / kaki", 90, 8, 11],
+      ["Romanian Deadlift", 3, "10-12", 120, 30, 11],
+      ["Barbell Hip Thrust", 3, "12-15", 75, 30, 13],
+      ["Standing Calf Raise", 4, "15-20", 45, 12, 18],
+      ["Plank", 3, "40-60 dtk", 45, null, 45],
     ],
   },
 ];
@@ -294,7 +302,7 @@ async function main() {
       data: { key: d.key, label: d.label, category: d.category, order: d.order },
     });
     for (let i = 0; i < d.items.length; i++) {
-      const [name, sets, reps, rest] = d.items[i];
+      const [name, sets, reps, rest, suggestWeight, suggestReps] = d.items[i];
       const exerciseId = exMap.get(name);
       if (!exerciseId) throw new Error(`Exercise not found in library: ${name}`);
       await prisma.dayExercise.create({
@@ -305,6 +313,8 @@ async function main() {
           targetSets: sets,
           targetReps: reps,
           restSeconds: rest,
+          suggestWeight,
+          suggestReps,
         },
       });
     }

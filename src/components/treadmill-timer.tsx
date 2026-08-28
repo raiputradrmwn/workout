@@ -97,68 +97,92 @@ export function TreadmillTimer({
   const ss = remaining % 60;
   const pct = ((TOTAL - remaining) / TOTAL) * 100;
   const elapsedMin = Math.max(1, Math.round((TOTAL - remaining) / 60));
+  const R = 45;
+  const C = 2 * Math.PI * R;
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-3 gap-3 text-center">
+    <div className="card-shadow mx-auto max-w-md space-y-8 rounded-3xl border bg-card p-8">
+      <div className="grid grid-cols-3 gap-3">
         {[
           ["Incline", TREADMILL_DEFAULT.incline],
-          ["Kecepatan", TREADMILL_DEFAULT.speed],
+          ["Speed", TREADMILL_DEFAULT.speed],
           ["Menit", TREADMILL_DEFAULT.minutes],
         ].map(([k, v]) => (
-          <div key={k} className="rounded-lg border p-3">
-            <p className="text-xs text-muted-foreground">{k}</p>
-            <p className="text-xl font-bold tabular-nums">{v}</p>
+          <div key={k} className="rounded-2xl bg-muted/60 p-4 text-center">
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">
+              {k}
+            </p>
+            <p className="mt-1 text-2xl font-semibold tabular-nums">{v}</p>
           </div>
         ))}
       </div>
 
-      <div className="relative mx-auto grid aspect-square w-full max-w-xs place-items-center">
+      <div className="relative mx-auto grid aspect-square w-full max-w-[15rem] place-items-center">
         <svg className="absolute inset-0 -rotate-90" viewBox="0 0 100 100">
-          <circle cx="50" cy="50" r="45" className="fill-none stroke-muted" strokeWidth="6" />
           <circle
             cx="50"
             cy="50"
-            r="45"
+            r={R}
+            className="fill-none stroke-border"
+            strokeWidth="7"
+          />
+          <circle
+            cx="50"
+            cy="50"
+            r={R}
             className="fill-none stroke-primary transition-[stroke-dashoffset] duration-1000 ease-linear"
-            strokeWidth="6"
+            strokeWidth="7"
             strokeLinecap="round"
-            strokeDasharray={2 * Math.PI * 45}
-            strokeDashoffset={2 * Math.PI * 45 * (1 - pct / 100)}
+            strokeDasharray={C}
+            strokeDashoffset={C * (1 - pct / 100)}
           />
         </svg>
         <div className="text-center">
-          <p className="text-5xl font-bold tabular-nums">
+          <p className="text-5xl font-semibold tabular-nums">
             {mm}:{ss.toString().padStart(2, "0")}
           </p>
-          <p className="text-sm text-muted-foreground">
-            {running ? "berjalan" : remaining === 0 ? "selesai" : "siap"}
+          <p className="mt-1 text-sm text-muted-foreground">
+            {running ? "berjalan" : remaining === 0 ? "selesai" : "siap mulai"}
           </p>
         </div>
       </div>
 
-      <div className="flex justify-center gap-3">
-        <Button size="lg" onClick={toggle} disabled={pending || remaining === 0}>
+      <div className="flex flex-col gap-2.5">
+        <Button
+          size="lg"
+          onClick={toggle}
+          disabled={pending || remaining === 0}
+          className="h-12 text-base"
+        >
           {running ? <Pause className="size-5" /> : <Play className="size-5" />}
           {running ? "Jeda" : remaining === TOTAL ? "Mulai" : "Lanjut"}
         </Button>
-        <Button size="lg" variant="outline" onClick={reset} disabled={pending}>
-          <RotateCcw className="size-5" /> Reset
-        </Button>
-        <Button
-          size="lg"
-          variant="secondary"
-          onClick={() => save(elapsedMin)}
-          disabled={pending || remaining === TOTAL}
-        >
-          Selesai sekarang
-        </Button>
+        <div className="grid grid-cols-2 gap-2.5">
+          <Button
+            size="lg"
+            variant="outline"
+            onClick={reset}
+            disabled={pending}
+            className="h-11"
+          >
+            <RotateCcw className="size-4" /> Reset
+          </Button>
+          <Button
+            size="lg"
+            variant="secondary"
+            onClick={() => save(elapsedMin)}
+            disabled={pending || remaining === TOTAL}
+            className="h-11"
+          >
+            Selesai sekarang
+          </Button>
+        </div>
       </div>
 
       {finished && (
-        <p className="text-center text-sm text-primary">
+        <p className="rounded-xl bg-success/10 px-4 py-3 text-center text-sm font-medium text-success">
           Treadmill hari ini sudah tercatat
-          {todayMinutes ? ` (${todayMinutes} menit)` : ""}. Boleh diulang kalau mau.
+          {todayMinutes ? ` (${todayMinutes} menit)` : ""}. Boleh diulang.
         </p>
       )}
     </div>

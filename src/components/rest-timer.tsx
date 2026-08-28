@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Pause, Play, Plus, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 function beep() {
   try {
@@ -72,52 +71,52 @@ export function RestTimer({
   const over = remaining === 0;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-30 border-t bg-background/95 backdrop-blur">
-      <div className="mx-auto max-w-3xl px-4 py-3">
-        <div className="flex items-center gap-4">
-          <div className="relative shrink-0">
-            <div
-              className={`grid size-16 place-items-center rounded-full text-lg font-bold tabular-nums ${
-                over ? "bg-primary text-primary-foreground animate-pulse" : "bg-muted"
-              }`}
-            >
-              {mm}:{ss.toString().padStart(2, "0")}
-            </div>
-          </div>
-          <div className="flex-1">
-            <p className="text-xs text-muted-foreground">
-              {over ? "Istirahat selesai - lanjut set berikutnya" : "Istirahat"}
-              {label ? ` - ${label}` : ""}
-            </p>
-            <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-muted">
-              <div
-                className="h-full rounded-full bg-primary transition-[width] duration-1000 ease-linear"
-                style={{ width: `${over ? 100 : pct}%` }}
-              />
-            </div>
-          </div>
-          <div className="flex items-center gap-1">
-            <Button
-              size="icon"
-              variant="outline"
-              onClick={() => addTime(15)}
-              title="+15 detik"
-            >
-              <Plus className="size-4" />
-              15
-            </Button>
-            <Button
-              size="icon"
-              variant="outline"
-              onClick={() => setRunning((r) => !r)}
-              title={running ? "Jeda" : "Lanjut"}
-            >
-              {running ? <Pause className="size-4" /> : <Play className="size-4" />}
-            </Button>
-            <Button size="icon" onClick={onClose} title="Tutup / lewati">
-              <X className="size-4" />
-            </Button>
-          </div>
+    <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card/95 backdrop-blur-md">
+      <div
+        className={`h-1 transition-[width] duration-1000 ease-linear ${over ? "bg-success" : "bg-primary"}`}
+        style={{ width: `${over ? 100 : pct}%` }}
+      />
+      <div className="mx-auto flex max-w-3xl items-center gap-4 px-4 py-3.5 sm:px-6">
+        <div
+          className={`grid size-16 shrink-0 place-items-center rounded-2xl text-xl font-bold tabular-nums ${
+            over
+              ? "animate-pulse bg-success text-success-foreground"
+              : "bg-primary/10 text-primary"
+          }`}
+        >
+          {mm}:{ss.toString().padStart(2, "0")}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold">
+            {over ? "Waktunya set berikutnya" : "Istirahat"}
+          </p>
+          {label && (
+            <p className="truncate text-sm text-muted-foreground">{label}</p>
+          )}
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <button
+            onClick={() => addTime(15)}
+            title="+15 detik"
+            className="inline-flex h-11 items-center gap-1 rounded-xl border border-input bg-background px-3 text-sm font-medium hover:bg-muted"
+          >
+            <Plus className="size-4" />
+            15s
+          </button>
+          <button
+            onClick={() => setRunning((r) => !r)}
+            title={running ? "Jeda" : "Lanjut"}
+            className="grid size-11 place-items-center rounded-xl border border-input bg-background hover:bg-muted"
+          >
+            {running ? <Pause className="size-5" /> : <Play className="size-5" />}
+          </button>
+          <button
+            onClick={onClose}
+            title="Lewati"
+            className="grid size-11 place-items-center rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
+          >
+            <X className="size-5" />
+          </button>
         </div>
       </div>
     </div>

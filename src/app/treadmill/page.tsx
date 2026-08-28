@@ -13,13 +13,16 @@ export default async function TreadmillPage() {
   });
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Treadmill</h1>
-        <p className="text-sm text-muted-foreground">
-          Dilakukan setiap hari, termasuk hari rest.
+    <div className="space-y-8">
+      <header className="space-y-1">
+        <p className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
+          Kardio harian
         </p>
-      </div>
+        <h1 className="text-3xl font-semibold sm:text-4xl">Treadmill</h1>
+        <p className="text-muted-foreground">
+          Dilakukan setiap hari, termasuk hari istirahat.
+        </p>
+      </header>
       <TreadmillTimer
         todayFinished={!!today?.finishedAt}
         todayMinutes={today?.finishedAt ? today.minutes : null}

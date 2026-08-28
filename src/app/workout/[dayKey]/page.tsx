@@ -40,6 +40,8 @@ export default async function WorkoutPage({
       targetSets: de.targetSets,
       targetReps: de.targetReps,
       restSeconds: de.restSeconds,
+      suggestWeight: de.suggestWeight,
+      suggestReps: de.suggestReps,
       last: await lastPerformance(de.exerciseId),
       existing: session.setLogs
         .filter((l) => l.exerciseId === de.exerciseId)
