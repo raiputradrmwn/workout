@@ -13,6 +13,7 @@ import {
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { RestTimer } from "@/components/rest-timer";
+import { ExerciseDemo } from "@/components/exercise-demo";
 import { finishSession, upsertSet } from "@/lib/actions";
 import { BETWEEN_EXERCISE_REST } from "@/lib/schedule";
 
@@ -196,14 +197,16 @@ export function SessionRunner({
           >
             <div className="space-y-3 p-5">
               <div className="flex items-start gap-3">
-                <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary/10 text-sm font-bold text-primary">
-                  {ex.order}
-                </span>
+                <ExerciseDemo name={ex.name} cues={ex.cues} />
                 <div className="min-w-0 flex-1">
                   <h2 className="text-lg font-semibold leading-tight">
+                    <span className="text-muted-foreground">{ex.order}. </span>
                     {ex.name}
                   </h2>
                   <p className="text-sm text-muted-foreground">{ex.muscles}</p>
+                  <p className="mt-0.5 text-xs text-primary">
+                    Ketuk gambar untuk animasi gerakan
+                  </p>
                 </div>
                 <span className="shrink-0 rounded-lg bg-muted px-2.5 py-1 font-mono text-sm font-medium tabular-nums">
                   {ex.targetSets} × {ex.targetReps}

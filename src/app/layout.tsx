@@ -39,6 +39,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <main className="mx-auto w-full max-w-[1600px] flex-1 px-4 py-8 sm:px-6 lg:px-10 lg:py-10">
           {children}
         </main>
+        <footer className="border-t border-border/80 py-4 text-center text-xs text-muted-foreground">
+          <Link href="/kredit" className="hover:text-foreground hover:underline">
+            Kredit &amp; lisensi
+          </Link>
+        </footer>
         <Toaster richColors position="top-center" />
       </body>
     </html>
