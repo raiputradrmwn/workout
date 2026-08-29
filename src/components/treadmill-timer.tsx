@@ -5,33 +5,9 @@ import { Lightbulb, Pause, Play, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { finishTreadmill, startTreadmill } from "@/lib/actions";
+import { playChime, primeAudio, vibrate } from "@/lib/audio";
 
 type Plan = { incline: number; speed: number; minutes: number };
-
-function ding() {
-  try {
-    const Ctx =
-      window.AudioContext ||
-      (window as unknown as { webkitAudioContext: typeof AudioContext })
-        .webkitAudioContext;
-    const ctx = new Ctx();
-    [660, 880, 990].forEach((f, i) => {
-      const o = ctx.createOscillator();
-      const g = ctx.createGain();
-      o.connect(g);
-      g.connect(ctx.destination);
-      o.frequency.value = f;
-      g.gain.setValueAtTime(0.0001, ctx.currentTime + i * 0.2);
-      g.gain.exponentialRampToValueAtTime(0.35, ctx.currentTime + i * 0.2 + 0.02);
-      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + i * 0.2 + 0.4);
-      o.start(ctx.currentTime + i * 0.2);
-      o.stop(ctx.currentTime + i * 0.2 + 0.42);
-    });
-    setTimeout(() => ctx.close(), 1500);
-  } catch {
-    /* ignore */
-  }
-}
 
 const num = (v: string, fallback: number) => {
   const n = Number(v);
@@ -91,8 +67,8 @@ export function TreadmillTimer({
   useEffect(() => {
     if (remaining === 0 && running) {
       setRunning(false);
-      ding();
-      if (navigator.vibrate) navigator.vibrate([300, 120, 300, 120, 300]);
+      playChime(3);
+      vibrate([300, 120, 300, 120, 300]);
       save(targetMin);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -109,6 +85,7 @@ export function TreadmillTimer({
   }
 
   function toggle() {
+    primeAudio();
     if (!running && remaining === total) {
       startT(async () => {
         await ensureId();

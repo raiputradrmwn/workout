@@ -3,38 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Minus, Pause, Play, Plus, X } from "lucide-react";
 import { toast } from "sonner";
-
-function chime(times = 2) {
-  try {
-    const Ctx =
-      window.AudioContext ||
-      (window as unknown as { webkitAudioContext: typeof AudioContext })
-        .webkitAudioContext;
-    const ctx = new Ctx();
-    const notes = [880, 1175, 1568]; // A5, D6, G6
-    let t = ctx.currentTime;
-    for (let rep = 0; rep < times; rep++) {
-      for (const f of notes) {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.type = "sine";
-        osc.frequency.value = f;
-        gain.gain.setValueAtTime(0.0001, t);
-        gain.gain.exponentialRampToValueAtTime(0.5, t + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.28);
-        osc.start(t);
-        osc.stop(t + 0.3);
-        t += 0.16;
-      }
-      t += 0.22;
-    }
-    setTimeout(() => ctx.close(), (t - ctx.currentTime) * 1000 + 200);
-  } catch {
-    /* diabaikan */
-  }
-}
+import { playChime, vibrate } from "@/lib/audio";
 
 function flashTitle(msg: string) {
   if (typeof document === "undefined") return;
@@ -44,7 +13,7 @@ function flashTitle(msg: string) {
   const id = setInterval(() => {
     document.title = on ? msg : original;
     on = !on;
-    if (++n > 10) {
+    if (++n > 12) {
       clearInterval(id);
       document.title = original;
     }
@@ -54,9 +23,8 @@ function flashTitle(msg: string) {
 function notify(body: string) {
   try {
     if (typeof Notification === "undefined") return;
-    if (Notification.permission === "granted") {
+    if (Notification.permission === "granted")
       new Notification("Istirahat selesai", { body, tag: "rest-timer" });
-    }
   } catch {
     /* diabaikan */
   }
@@ -74,22 +42,21 @@ export function RestTimer({
   const [remaining, setRemaining] = useState(initial);
   const [total, setTotal] = useState(initial);
   const [running, setRunning] = useState(true);
-  const firedRef = useRef(false);
+  const oncePerZeroRef = useRef(false);
 
-  // Minta izin notifikasi begitu timer pertama muncul.
   useEffect(() => {
     try {
       if (
         typeof Notification !== "undefined" &&
         Notification.permission === "default"
-      ) {
+      )
         Notification.requestPermission().catch(() => {});
-      }
     } catch {
       /* diabaikan */
     }
   }, []);
 
+  // hitung mundur
   useEffect(() => {
     if (!running) return;
     const id = setInterval(() => {
@@ -98,23 +65,30 @@ export function RestTimer({
     return () => clearInterval(id);
   }, [running]);
 
+  // saat 0: bunyi + getar BERULANG tiap 3 dtk sampai ditutup / dijeda
   useEffect(() => {
-    if (remaining === 0 && !firedRef.current) {
-      firedRef.current = true;
-      chime(2);
-      if (typeof navigator !== "undefined" && navigator.vibrate)
-        navigator.vibrate([400, 150, 400, 150, 600]);
+    if (remaining !== 0) {
+      oncePerZeroRef.current = false;
+      return;
+    }
+    if (!oncePerZeroRef.current) {
+      oncePerZeroRef.current = true;
       notify(label ?? "Lanjut set berikutnya");
       flashTitle("⏰ Istirahat selesai!");
       toast.success("Istirahat selesai", { description: label });
     }
-  }, [remaining, label]);
+    if (!running) return; // dijeda = berhenti mengganggu
+    const fire = () => {
+      playChime(2);
+      vibrate([400, 150, 400, 150, 600]);
+    };
+    fire();
+    const id = setInterval(fire, 3000);
+    return () => clearInterval(id);
+  }, [remaining, running, label]);
 
   const addTime = useCallback((sec: number) => {
-    if (sec > 0) {
-      firedRef.current = false;
-      setRunning(true);
-    }
+    if (sec > 0) setRunning(true);
     setRemaining((r) => Math.max(0, r + sec));
     setTotal((t) => Math.max(1, t + sec));
   }, []);
@@ -145,9 +119,7 @@ export function RestTimer({
           {mm}:{ss.toString().padStart(2, "0")}
         </div>
         <div className="min-w-0 flex-1">
-          <p
-            className={`text-sm font-semibold ${over ? "text-success" : ""}`}
-          >
+          <p className={`text-sm font-semibold ${over ? "text-success" : ""}`}>
             {over ? "✓ Istirahat selesai — lanjut!" : "Istirahat"}
           </p>
           {label && (

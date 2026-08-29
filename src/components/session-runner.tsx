@@ -17,6 +17,7 @@ import { ExerciseDemo } from "@/components/exercise-demo";
 import { finishSession, upsertSet } from "@/lib/actions";
 import { BETWEEN_EXERCISE_REST } from "@/lib/schedule";
 import { warmupFor } from "@/lib/warmup";
+import { primeAudio } from "@/lib/audio";
 
 type SetRef = { setNumber: number; weightKg: number | null; reps: number | null };
 
@@ -103,6 +104,7 @@ export function SessionRunner({
   }
 
   function completeSet(ex: RunnerExercise, setNumber: number) {
+    primeAudio();
     const key = `${ex.exerciseId}:${setNumber}`;
     const cell = cells[key];
     const weightKg = cell.weight === "" ? null : Number(cell.weight);
@@ -276,13 +278,14 @@ export function SessionRunner({
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
                 <button
                   type="button"
-                  onClick={() =>
+                  onClick={() => {
+                    primeAudio();
                     setRest({
                       id: Date.now(),
                       seconds: ex.restSeconds,
                       label: ex.name,
-                    })
-                  }
+                    });
+                  }}
                   className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 font-medium text-foreground hover:bg-primary/10 hover:text-primary"
                 >
                   <TimerReset className="size-3.5" /> Istirahat {ex.restSeconds}s
