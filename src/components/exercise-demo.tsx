@@ -9,9 +9,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { ExerciseFigure } from "@/components/exercise-figure";
-import { animFor, MUSCLE_LABEL } from "@/lib/exercise-anim";
-import { mediaFor } from "@/lib/exercise-media";
+import { mediaFor, MUSCLE_LABEL } from "@/lib/exercise-media";
 
 export function ExerciseDemo({
   name,
@@ -22,22 +20,48 @@ export function ExerciseDemo({
   cues: string;
   className?: string;
 }) {
-  const { pattern, muscle } = animFor(name);
-  const { wger, youtube } = mediaFor(name);
+  const { youtubeEmbed, wger, muscle } = mediaFor(name);
 
   return (
     <Dialog>
       <DialogTrigger
         aria-label={`Lihat demo gerakan ${name}`}
-        className={`group grid size-16 shrink-0 place-items-center rounded-xl border bg-muted/40 p-1 transition-colors hover:border-primary hover:bg-primary/5 ${className ?? ""}`}
+        className={`group relative grid size-16 shrink-0 place-items-center overflow-hidden rounded-xl border bg-muted/40 transition-colors hover:border-primary ${className ?? ""}`}
       >
-        <ExerciseFigure pattern={pattern} muscle={muscle} />
+        {wger[0] ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={wger[0]}
+            alt=""
+            loading="lazy"
+            referrerPolicy="no-referrer"
+            className="size-full object-cover"
+          />
+        ) : (
+          <Play className="size-6 fill-primary text-primary" />
+        )}
+        <span className="absolute inset-0 grid place-items-center bg-foreground/25 opacity-0 transition-opacity group-hover:opacity-100">
+          <Play className="size-6 fill-white text-white" />
+        </span>
       </DialogTrigger>
 
-      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-md">
+      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
         <DialogTitle>{name}</DialogTitle>
 
-        {wger.length > 0 ? (
+        {youtubeEmbed ? (
+          <div className="aspect-video w-full overflow-hidden rounded-xl border bg-black">
+            <iframe
+              src={youtubeEmbed}
+              title={`Demo ${name}`}
+              className="size-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              referrerPolicy="strict-origin-when-cross-origin"
+              allowFullScreen
+            />
+          </div>
+        ) : null}
+
+        {wger.length > 0 && (
           <div className="space-y-1.5">
             <div className="grid grid-cols-2 gap-2">
               {wger.map((src) => (
@@ -68,21 +92,7 @@ export function ExerciseDemo({
               </Link>
             </p>
           </div>
-        ) : (
-          <div className="mx-auto aspect-square w-full max-w-[15rem] rounded-2xl border bg-muted/30 p-4">
-            <ExerciseFigure pattern={pattern} muscle={muscle} />
-          </div>
         )}
-
-        <a
-          href={youtube}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary text-base font-medium text-primary-foreground hover:bg-primary/90"
-        >
-          <Play className="size-4 fill-current" />
-          Video demo (YouTube)
-        </a>
 
         <p className="text-sm">
           <span className="font-medium">Otot utama:</span> {MUSCLE_LABEL[muscle]}
@@ -90,17 +100,6 @@ export function ExerciseDemo({
         <DialogDescription className="leading-relaxed text-foreground/80">
           {cues}
         </DialogDescription>
-
-        {wger.length > 0 && (
-          <details className="text-sm text-muted-foreground">
-            <summary className="cursor-pointer select-none">
-              Lihat animasi figur
-            </summary>
-            <div className="mx-auto mt-2 aspect-square w-full max-w-[13rem] rounded-2xl border bg-muted/30 p-4">
-              <ExerciseFigure pattern={pattern} muscle={muscle} />
-            </div>
-          </details>
-        )}
       </DialogContent>
     </Dialog>
   );

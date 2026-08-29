@@ -60,6 +60,7 @@ export default async function WorkoutPage({
     <SessionRunner
       sessionId={sessionId}
       dayLabel={day.label}
+      dayCategory={day.category}
       exercises={exercises}
       alreadyFinished={!!session.finishedAt}
     />

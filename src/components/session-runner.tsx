@@ -16,6 +16,7 @@ import { RestTimer } from "@/components/rest-timer";
 import { ExerciseDemo } from "@/components/exercise-demo";
 import { finishSession, upsertSet } from "@/lib/actions";
 import { BETWEEN_EXERCISE_REST } from "@/lib/schedule";
+import { warmupFor } from "@/lib/warmup";
 
 type SetRef = { setNumber: number; weightKg: number | null; reps: number | null };
 
@@ -42,15 +43,19 @@ const NO_WEIGHT = new Set(["band", "bodyweight", "pullup"]);
 export function SessionRunner({
   sessionId,
   dayLabel,
+  dayCategory,
   exercises,
   alreadyFinished,
 }: {
   sessionId: string;
   dayLabel: string;
+  dayCategory: string;
   exercises: RunnerExercise[];
   alreadyFinished: boolean;
 }) {
   const router = useRouter();
+  const warmup = useMemo(() => warmupFor(dayCategory), [dayCategory]);
+  const [warmDone, setWarmDone] = useState<Set<number>>(new Set());
   const [pending, startTransition] = useTransition();
   const [finished, setFinished] = useState(alreadyFinished);
   const [rest, setRest] = useState<{
@@ -181,6 +186,61 @@ export function SessionRunner({
         </p>
       </div>
 
+      {/* Pemanasan */}
+      <details
+        open
+        className="card-shadow group overflow-hidden rounded-2xl border bg-card"
+      >
+        <summary className="flex cursor-pointer list-none items-center gap-2 p-5 font-semibold">
+          <TimerReset className="size-4 text-primary" />
+          Pemanasan
+          <span className="text-sm font-normal text-muted-foreground">
+            ~5–8 menit &middot; {warmDone.size}/{warmup.length}
+          </span>
+          <ChevronDown className="ml-auto size-4 transition-transform group-open:rotate-180" />
+        </summary>
+        <ul className="space-y-1 border-t bg-muted/30 p-3 sm:p-4">
+          {warmup.map((d, i) => {
+            const done = warmDone.has(i);
+            return (
+              <li key={d.name}>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setWarmDone((s) => {
+                      const n = new Set(s);
+                      n.has(i) ? n.delete(i) : n.add(i);
+                      return n;
+                    })
+                  }
+                  className={`flex w-full items-start gap-3 rounded-xl border p-2.5 text-left transition-colors ${
+                    done
+                      ? "border-success/40 bg-success/10"
+                      : "border-transparent bg-card hover:border-border"
+                  }`}
+                >
+                  <span
+                    className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded-md border ${
+                      done
+                        ? "border-success bg-success text-success-foreground"
+                        : "border-input"
+                    }`}
+                  >
+                    {done && <Check className="size-3.5" />}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="font-medium">{d.name}</span>
+                    <span className="block text-sm text-muted-foreground">
+                      {d.detail}
+                    </span>
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </details>
+
       {exercises.map((ex) => {
         const hasWeight = !NO_WEIGHT.has(ex.equipment);
         const lastText =
@@ -205,7 +265,7 @@ export function SessionRunner({
                   </h2>
                   <p className="text-sm text-muted-foreground">{ex.muscles}</p>
                   <p className="mt-0.5 text-xs text-primary">
-                    Ketuk gambar untuk animasi gerakan
+                    Ketuk untuk video demo &amp; foto
                   </p>
                 </div>
                 <span className="shrink-0 rounded-lg bg-muted px-2.5 py-1 font-mono text-sm font-medium tabular-nums">
