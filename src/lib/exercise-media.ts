@@ -76,11 +76,7 @@ const DATA: Record<string, Entry> = {
     yt: "a9oPnZReIRE",
     muscle: "triceps",
   },
-  "Band Triceps Pushdown": {
-    yt: "MWKI0LFnejA",
-    muscle: "triceps",
-    wger: [`${W}/805/7a437824-e2cc-46e1-804a-674f0ea31d25.png`],
-  },
+  "Bench Dips": { yt: "yvAzWxRsnqU", muscle: "triceps" },
   "Pull-up": {
     yt: "jgFel4wZl3I",
     muscle: "lats",

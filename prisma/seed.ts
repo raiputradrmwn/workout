@@ -58,11 +58,11 @@ const exercises = [
     cues: "Siku tetap sempit menghadap depan. Turunkan dumbbell di belakang kepala, luruskan penuh.",
   },
   {
-    name: "Band Triceps Pushdown",
+    name: "Bench Dips",
     category: "PUSH",
-    equipment: "band",
-    muscles: "Triceps",
-    cues: "Anchor band tinggi di pull-up stand. Siku terkunci di samping badan, luruskan penuh lalu tahan.",
+    equipment: "bodyweight",
+    muscles: "Triceps, dada bawah",
+    cues: "Telapak tangan di tepi bench, jari menghadap depan. Kaki di lantai (tekuk lutut = lebih ringan, luruskan = lebih berat). Turun sampai siku ~90 derajat, jaga siku tidak melebar, dorong naik dari triceps.",
   },
 
   // ---- PULL ----
@@ -211,7 +211,7 @@ const days: {
       ["Seated Dumbbell Shoulder Press", 3, "8-12", 90, 8, 10],
       ["Dumbbell Lateral Raise", 3, "12-20", 60, 5, 15],
       ["Overhead Dumbbell Triceps Extension", 3, "10-15", 60, 8, 12],
-      ["Band Triceps Pushdown", 2, "15-20", 45, null, 18],
+      ["Bench Dips", 2, "12-20", 45, null, 15],
     ],
   },
   {
@@ -250,7 +250,7 @@ const days: {
       ["Seated Dumbbell Shoulder Press", 3, "8-12", 90, 8, 10],
       ["Feet-Elevated Push-up", 3, "maks (AMRAP)", 90, null, 12],
       ["Dumbbell Lateral Raise", 4, "12-20", 60, 5, 15],
-      ["Band Triceps Pushdown", 3, "15-20", 45, null, 18],
+      ["Bench Dips", 3, "12-20", 45, null, 15],
       ["Overhead Dumbbell Triceps Extension", 2, "10-15", 60, 8, 12],
     ],
   },
