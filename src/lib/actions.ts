@@ -183,6 +183,34 @@ export async function finishTreadmill(
   revalidatePath("/history", "page");
 }
 
+export async function deleteWorkoutSession(id: string) {
+  await db.workoutSession.delete({ where: { id } });
+  revalidatePath("/history", "page");
+  revalidatePath("/", "page");
+}
+
+export async function deleteTreadmill(id: string) {
+  await db.treadmillSession.delete({ where: { id } });
+  revalidatePath("/history", "page");
+  revalidatePath("/treadmill", "page");
+  revalidatePath("/", "page");
+}
+
+export async function updateTreadmill(
+  id: string,
+  data: {
+    incline: number;
+    speed: number;
+    minutes: number;
+    distanceKm: number | null;
+  },
+) {
+  await db.treadmillSession.update({ where: { id }, data });
+  revalidatePath("/history", "page");
+  revalidatePath("/treadmill", "page");
+  revalidatePath("/", "page");
+}
+
 /** Catat / ubah sesi treadmill untuk tanggal tertentu (YYYY-MM-DD), tanpa timer. */
 export async function logTreadmill(input: {
   dateISO: string;

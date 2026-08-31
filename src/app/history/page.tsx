@@ -1,14 +1,8 @@
-import { Dumbbell, Footprints } from "lucide-react";
 import { db } from "@/lib/db";
 import { startOfToday } from "@/lib/schedule";
+import { HistoryList, type HistoryItem } from "@/components/history-list";
 
 export const dynamic = "force-dynamic";
-
-const fmt = new Intl.DateTimeFormat("id-ID", {
-  weekday: "long",
-  day: "numeric",
-  month: "long",
-});
 
 export default async function HistoryPage() {
   const [sessions, treadmills] = await Promise.all([
@@ -37,14 +31,33 @@ export default async function HistoryPage() {
     0,
   );
 
-  type Item =
-    | { kind: "workout"; date: Date; s: (typeof sessions)[number] }
-    | { kind: "treadmill"; date: Date; t: (typeof treadmills)[number] };
-
-  const items: Item[] = [
-    ...sessions.map((s) => ({ kind: "workout" as const, date: s.date, s })),
-    ...treadmills.map((t) => ({ kind: "treadmill" as const, date: t.date, t })),
-  ].sort((a, b) => b.date.getTime() - a.date.getTime());
+  const items: HistoryItem[] = [
+    ...sessions.map((s) => {
+      const done = s.setLogs.filter((l) => l.done);
+      return {
+        kind: "workout" as const,
+        id: s.id,
+        date: s.date.toISOString(),
+        label: s.day.label,
+        sets: done.length,
+        volume: done.reduce(
+          (a, l) => a + (l.weightKg ?? 0) * (l.reps ?? 0),
+          0,
+        ),
+        finished: !!s.finishedAt,
+      };
+    }),
+    ...treadmills.map((t) => ({
+      kind: "treadmill" as const,
+      id: t.id,
+      date: t.date.toISOString(),
+      incline: t.incline,
+      speed: t.speed,
+      minutes: t.minutes,
+      distanceKm: t.distanceKm,
+      finished: !!t.finishedAt,
+    })),
+  ].sort((a, b) => (a.date < b.date ? 1 : -1));
 
   const stats = [
     ["Latihan / 7 hari", workoutsThisWeek],
@@ -77,76 +90,7 @@ export default async function HistoryPage() {
         ))}
       </div>
 
-      {items.length === 0 ? (
-        <p className="text-muted-foreground">Belum ada catatan.</p>
-      ) : (
-        <ul className="space-y-3">
-          {items.map((it) => {
-            if (it.kind === "treadmill") {
-              const t = it.t;
-              return (
-                <li
-                  key={`t-${t.id}`}
-                  className="card-shadow flex items-center gap-4 rounded-2xl border bg-card p-4"
-                >
-                  <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-chart-2/10 text-chart-2">
-                    <Footprints className="size-5" />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium">Treadmill</p>
-                    <p className="text-sm text-muted-foreground">
-                      {fmt.format(t.date)} &middot; incline {t.incline} &middot;{" "}
-                      {t.speed} km/j
-                      {t.distanceKm ? ` · ${t.distanceKm} km` : ""}
-                    </p>
-                  </div>
-                  <span
-                    className={`shrink-0 rounded-full px-3 py-1 text-sm font-medium ${
-                      t.finishedAt
-                        ? "bg-success/10 text-success"
-                        : "bg-muted text-muted-foreground"
-                    }`}
-                  >
-                    {t.finishedAt ? `${t.minutes} mnt` : "belum selesai"}
-                  </span>
-                </li>
-              );
-            }
-            const s = it.s;
-            const done = s.setLogs.filter((l) => l.done);
-            const volume = done.reduce(
-              (a, l) => a + (l.weightKg ?? 0) * (l.reps ?? 0),
-              0,
-            );
-            return (
-              <li
-                key={`s-${s.id}`}
-                className="card-shadow flex items-center gap-4 rounded-2xl border bg-card p-4"
-              >
-                <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
-                  <Dumbbell className="size-5" />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="font-medium">{s.day.label}</p>
-                  <p className="text-sm text-muted-foreground tabular-nums">
-                    {fmt.format(s.date)} &middot; {done.length} set &middot;{" "}
-                    {Math.round(volume).toLocaleString("id-ID")} kg
-                  </p>
-                </div>
-                <span
-                  className={`shrink-0 rounded-full px-3 py-1 text-sm font-medium ${
-                    s.finishedAt
-                      ? "bg-success/10 text-success"
-                      : "bg-muted text-muted-foreground"
-                  }`}
-                >
-                  {s.finishedAt ? "selesai" : "berjalan"}
-                </span>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+      <HistoryList items={items} />
     </div>
   );
 }

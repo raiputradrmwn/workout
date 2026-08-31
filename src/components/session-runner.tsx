@@ -165,6 +165,12 @@ export function SessionRunner({
 
   return (
     <div className="mx-auto max-w-3xl space-y-5 pb-44">
+      <datalist id="dumbbell-kg">
+        {Array.from({ length: 12 }, (_, i) => i + 1).map((n) => (
+          <option key={n} value={n} />
+        ))}
+      </datalist>
+
       {/* sticky progress header */}
       <div className="card-shadow sticky top-20 z-10 rounded-2xl border bg-card/95 p-5 backdrop-blur">
         <div className="flex items-center justify-between gap-3">
@@ -383,6 +389,9 @@ export function SessionRunner({
                     </span>
                     <input
                       inputMode="decimal"
+                      list={
+                        ex.equipment === "dumbbell" ? "dumbbell-kg" : undefined
+                      }
                       placeholder={hasWeight ? "kg" : "BB"}
                       disabled={!hasWeight}
                       value={hasWeight ? cell.weight : ""}
