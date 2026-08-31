@@ -52,6 +52,7 @@ model WorkoutSession {
   day        WorkoutDay @relation(fields: [dayId], references: [id])
   finishedAt DateTime?
   notes      String?
+  swaps      Json? // { [dayExerciseId]: exerciseId } — pengganti gerakan per sesi
   setLogs    SetLog[]
 }
 

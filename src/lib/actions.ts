@@ -48,6 +48,37 @@ export async function upsertSet(input: {
   revalidatePath("/workout/[dayKey]", "page");
 }
 
+export async function swapExercise(
+  sessionId: string,
+  dayExerciseId: string,
+  exerciseId: string,
+) {
+  const s = await db.workoutSession.findUniqueOrThrow({
+    where: { id: sessionId },
+    select: { swaps: true, dayId: true },
+  });
+  const de = await db.dayExercise.findUniqueOrThrow({
+    where: { id: dayExerciseId },
+    select: { dayId: true },
+  });
+  if (de.dayId !== s.dayId) throw new Error("Gerakan bukan bagian dari hari ini");
+
+  const swaps = { ...((s.swaps as Record<string, string> | null) ?? {}) };
+  // kalau kembali ke gerakan asli, hapus entri
+  const de2 = await db.dayExercise.findUniqueOrThrow({
+    where: { id: dayExerciseId },
+    select: { exerciseId: true },
+  });
+  if (exerciseId === de2.exerciseId) delete swaps[dayExerciseId];
+  else swaps[dayExerciseId] = exerciseId;
+
+  await db.workoutSession.update({
+    where: { id: sessionId },
+    data: { swaps },
+  });
+  revalidatePath("/workout/[dayKey]", "page");
+}
+
 export async function finishSession(sessionId: string) {
   await db.workoutSession.update({
     where: { id: sessionId },
@@ -147,6 +178,39 @@ export async function finishTreadmill(
       distanceKm: data.distanceKm,
     },
   });
+  revalidatePath("/treadmill", "page");
+  revalidatePath("/", "page");
+  revalidatePath("/history", "page");
+}
+
+/** Catat / ubah sesi treadmill untuk tanggal tertentu (YYYY-MM-DD), tanpa timer. */
+export async function logTreadmill(input: {
+  dateISO: string;
+  incline: number;
+  speed: number;
+  minutes: number;
+  distanceKm: number | null;
+}) {
+  const [y, m, d] = input.dateISO.split("-").map(Number);
+  const start = new Date(y, m - 1, d);
+  const end = new Date(start.getTime() + 86400000);
+  const existing = await db.treadmillSession.findFirst({
+    where: { date: { gte: start, lt: end } },
+  });
+  const data = {
+    incline: input.incline,
+    speed: input.speed,
+    minutes: input.minutes,
+    distanceKm: input.distanceKm,
+    finishedAt: new Date(),
+  };
+  if (existing) {
+    await db.treadmillSession.update({ where: { id: existing.id }, data });
+  } else {
+    await db.treadmillSession.create({
+      data: { ...data, date: new Date(y, m - 1, d, 12, 0, 0) },
+    });
+  }
   revalidatePath("/treadmill", "page");
   revalidatePath("/", "page");
   revalidatePath("/history", "page");

@@ -122,6 +122,20 @@ const exercises = [
     muscles: "Core bawah, hip flexor",
     cues: "Gantung di pull-up stand. Angkat lutut ke dada, kontrol turun, minim ayunan.",
   },
+  {
+    name: "Band Lat Pulldown",
+    category: "PULL",
+    equipment: "band",
+    muscles: "Lats, upper back, biceps",
+    cues: "Anchor band tinggi (atas pintu / atas pull-up stand). Setengah berlutut, tarik handle turun ke bahu, siku ke bawah-belakang, remas lats. Kontrol saat kembali.",
+  },
+  {
+    name: "Band Biceps Curl",
+    category: "PULL",
+    equipment: "band",
+    muscles: "Biceps",
+    cues: "Injak band selebar bahu. Siku diam di samping badan, curl handle ke bahu, tahan 1 detik di atas, turun perlahan 2 detik.",
+  },
 
   // ---- LEGS ----
   {

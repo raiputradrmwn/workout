@@ -83,6 +83,8 @@ const DATA: Record<string, Entry> = {
     wger: [`${W}/475/b0554016-16fd-4dbe-be47-a2a17d16ae0e.jpg`],
   },
   "Band-Assisted / Negative Pull-up": { yt: "B_VkNQS5YLs", muscle: "lats" },
+  "Band Lat Pulldown": { yt: "ErDmbtmQrv4", muscle: "lats" },
+  "Band Biceps Curl": { yt: "pXS-fSPWpk8", muscle: "biceps" },
   "Barbell Bent-over Row": {
     yt: "Nr6Gu67wf40",
     muscle: "upper-back",

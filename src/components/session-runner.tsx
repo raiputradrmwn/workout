@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { RestTimer } from "@/components/rest-timer";
 import { ExerciseDemo } from "@/components/exercise-demo";
-import { finishSession, upsertSet } from "@/lib/actions";
+import { finishSession, swapExercise, upsertSet } from "@/lib/actions";
 import { BETWEEN_EXERCISE_REST } from "@/lib/schedule";
 import { warmupFor } from "@/lib/warmup";
 import { primeAudio } from "@/lib/audio";
@@ -22,6 +22,7 @@ import { primeAudio } from "@/lib/audio";
 type SetRef = { setNumber: number; weightKg: number | null; reps: number | null };
 
 export type RunnerExercise = {
+  dayExerciseId: string;
   exerciseId: string;
   name: string;
   muscles: string;
@@ -33,6 +34,7 @@ export type RunnerExercise = {
   restSeconds: number;
   suggestWeight: number | null;
   suggestReps: number | null;
+  alternatives: { id: string; name: string }[];
   last: SetRef[] | null;
   existing: (SetRef & { done: boolean })[];
 };
@@ -150,6 +152,13 @@ export function SessionRunner({
     });
   }
 
+  function doSwap(dayExerciseId: string, exerciseId: string) {
+    startTransition(async () => {
+      await swapExercise(sessionId, dayExerciseId, exerciseId);
+      router.refresh();
+    });
+  }
+
   const totalSets = exercises.reduce((a, e) => a + e.targetSets, 0);
   const doneSets = Object.values(cells).filter((c) => c.done).length;
   const pct = totalSets ? (doneSets / totalSets) * 100 : 0;
@@ -251,10 +260,10 @@ export function SessionRunner({
                 .map((s) => `${s.weightKg ?? "BB"} × ${s.reps ?? "-"}`)
                 .join(",  ")
             : null;
-        const open = openCue === ex.exerciseId;
+        const open = openCue === ex.dayExerciseId;
         return (
           <section
-            key={ex.exerciseId}
+            key={ex.dayExerciseId}
             className="card-shadow overflow-hidden rounded-2xl border bg-card"
           >
             <div className="space-y-3 p-5">
@@ -266,9 +275,24 @@ export function SessionRunner({
                     {ex.name}
                   </h2>
                   <p className="text-sm text-muted-foreground">{ex.muscles}</p>
-                  <p className="mt-0.5 text-xs text-primary">
-                    Ketuk untuk video demo &amp; foto
-                  </p>
+                  {ex.alternatives.length > 1 ? (
+                    <select
+                      value={ex.exerciseId}
+                      disabled={pending}
+                      onChange={(e) => doSwap(ex.dayExerciseId, e.target.value)}
+                      className="mt-1 max-w-full rounded-md border bg-background px-2 py-1 text-xs font-medium outline-none focus:border-ring"
+                    >
+                      {ex.alternatives.map((a) => (
+                        <option key={a.id} value={a.id}>
+                          {a.name}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <p className="mt-0.5 text-xs text-primary">
+                      Ketuk gambar untuk video demo
+                    </p>
+                  )}
                 </div>
                 <span className="shrink-0 rounded-lg bg-muted px-2.5 py-1 font-mono text-sm font-medium tabular-nums">
                   {ex.targetSets} × {ex.targetReps}
@@ -314,7 +338,9 @@ export function SessionRunner({
                 <button
                   type="button"
                   onClick={() =>
-                    setOpenCue((o) => (o === ex.exerciseId ? null : ex.exerciseId))
+                    setOpenCue((o) =>
+                      o === ex.dayExerciseId ? null : ex.dayExerciseId,
+                    )
                   }
                   className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
                 >

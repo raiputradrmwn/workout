@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { getOrCreateSession, lastPerformanceMany } from "@/lib/actions";
+import { alternativesFor } from "@/lib/exercise-alternatives";
 import {
   SessionRunner,
   type RunnerExercise,
@@ -28,33 +29,56 @@ export default async function WorkoutPage({
     where: { id: sessionId },
     include: { setLogs: true },
   });
+  const swaps = (session.swaps as Record<string, string> | null) ?? {};
 
-  const lastByExercise = await lastPerformanceMany(
-    day.exercises.map((de) => de.exerciseId),
+  // Semua gerakan alternatif yang mungkin dipakai hari ini
+  const altNames = new Set<string>();
+  for (const de of day.exercises)
+    for (const n of alternativesFor(de.exercise.name)) altNames.add(n);
+  const altRows = altNames.size
+    ? await db.exercise.findMany({ where: { name: { in: [...altNames] } } })
+    : [];
+  const byName = new Map(altRows.map((e) => [e.name, e]));
+  const byId = new Map(altRows.map((e) => [e.id, e]));
+  for (const de of day.exercises) byId.set(de.exercise.id, de.exercise);
+
+  const effectiveIds = day.exercises.map(
+    (de) => swaps[de.id] ?? de.exerciseId,
   );
+  const lastByExercise = await lastPerformanceMany(effectiveIds);
 
-  const exercises: RunnerExercise[] = day.exercises.map((de) => ({
-    exerciseId: de.exerciseId,
-    name: de.exercise.name,
-    muscles: de.exercise.muscles,
-    cues: de.exercise.cues,
-    equipment: de.exercise.equipment,
-    order: de.order,
-    targetSets: de.targetSets,
-    targetReps: de.targetReps,
-    restSeconds: de.restSeconds,
-    suggestWeight: de.suggestWeight,
-    suggestReps: de.suggestReps,
-    last: lastByExercise[de.exerciseId] ?? null,
-    existing: session.setLogs
-      .filter((l) => l.exerciseId === de.exerciseId)
-      .map((l) => ({
-        setNumber: l.setNumber,
-        weightKg: l.weightKg,
-        reps: l.reps,
-        done: l.done,
-      })),
-  }));
+  const exercises: RunnerExercise[] = day.exercises.map((de) => {
+    const effId = swaps[de.id] ?? de.exerciseId;
+    const ex = byId.get(effId) ?? de.exercise;
+    const alts = alternativesFor(de.exercise.name)
+      .map((n) => byName.get(n))
+      .filter((e): e is NonNullable<typeof e> => !!e)
+      .map((e) => ({ id: e.id, name: e.name }));
+    return {
+      dayExerciseId: de.id,
+      exerciseId: ex.id,
+      name: ex.name,
+      muscles: ex.muscles,
+      cues: ex.cues,
+      equipment: ex.equipment,
+      order: de.order,
+      targetSets: de.targetSets,
+      targetReps: de.targetReps,
+      restSeconds: de.restSeconds,
+      suggestWeight: de.suggestWeight,
+      suggestReps: de.suggestReps,
+      alternatives: alts.length > 1 ? alts : [],
+      last: lastByExercise[effId] ?? null,
+      existing: session.setLogs
+        .filter((l) => l.exerciseId === effId)
+        .map((l) => ({
+          setNumber: l.setNumber,
+          weightKg: l.weightKg,
+          reps: l.reps,
+          done: l.done,
+        })),
+    };
+  });
 
   return (
     <SessionRunner
