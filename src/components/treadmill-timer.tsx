@@ -236,43 +236,77 @@ export function TreadmillTimer({
         />
       </label>
 
-      <div className="flex flex-col gap-2.5">
-        <Button
-          size="lg"
-          onClick={toggle}
-          disabled={pending || remaining === 0}
-          className="h-12 text-base"
-        >
-          {running ? <Pause className="size-5" /> : <Play className="size-5" />}
-          {running ? "Jeda" : remaining === total ? "Mulai" : "Lanjut"}
-        </Button>
-        <div className="grid grid-cols-2 gap-2.5">
+      {finished ? (
+        <div className="space-y-2.5">
+          <p className="rounded-xl bg-success/10 px-4 py-3 text-center text-sm font-medium text-success">
+            Treadmill hari ini tercatat
+            {todayDistanceKm ? ` · ${todayDistanceKm} km` : ""}.
+          </p>
           <Button
             size="lg"
             variant="outline"
-            onClick={reset}
+            onClick={() => {
+              setFinished(false);
+              reset();
+            }}
             disabled={pending}
-            className="h-11"
+            className="h-11 w-full"
           >
-            <RotateCcw className="size-4" /> Reset
-          </Button>
-          <Button
-            size="lg"
-            variant="secondary"
-            onClick={() => save(elapsedMin)}
-            disabled={pending || elapsedSec === 0}
-            className="h-11"
-          >
-            Selesai sekarang
+            <RotateCcw className="size-4" /> Ubah / catat lagi
           </Button>
         </div>
-      </div>
+      ) : (
+        <div className="space-y-4">
+          {/* Catat manual — langsung dari angka yang diisi di atas */}
+          <Button
+            size="lg"
+            onClick={() => save(num(minutes, suggestion.minutes))}
+            disabled={pending || running}
+            className="h-12 w-full text-base"
+          >
+            Simpan (input manual)
+          </Button>
 
-      {finished && (
-        <p className="rounded-xl bg-success/10 px-4 py-3 text-center text-sm font-medium text-success">
-          Treadmill hari ini tercatat
-          {todayDistanceKm ? ` · ${todayDistanceKm} km` : ""}. Boleh diulang.
-        </p>
+          {/* atau pakai timer */}
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <span className="h-px flex-1 bg-border" />
+            atau pakai timer
+            <span className="h-px flex-1 bg-border" />
+          </div>
+
+          <div className="flex flex-col gap-2.5">
+            <Button
+              size="lg"
+              variant="secondary"
+              onClick={toggle}
+              disabled={pending || remaining === 0}
+              className="h-11 text-base"
+            >
+              {running ? <Pause className="size-5" /> : <Play className="size-5" />}
+              {running ? "Jeda" : remaining === total ? "Mulai" : "Lanjut"}
+            </Button>
+            <div className="grid grid-cols-2 gap-2.5">
+              <Button
+                size="lg"
+                variant="outline"
+                onClick={reset}
+                disabled={pending}
+                className="h-11"
+              >
+                <RotateCcw className="size-4" /> Reset
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                onClick={() => save(elapsedMin)}
+                disabled={pending || elapsedSec === 0}
+                className="h-11"
+              >
+                Selesai sekarang
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

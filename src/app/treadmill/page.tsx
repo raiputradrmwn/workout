@@ -24,7 +24,8 @@ export default async function TreadmillPage() {
         </p>
         <h1 className="text-3xl font-semibold sm:text-4xl">Treadmill</h1>
         <p className="text-muted-foreground">
-          Atur incline / kecepatan / durasi sesukamu — atau ikuti saran progresif.
+          Isi incline / kecepatan / menit / km lalu <b>Simpan</b> langsung, atau
+          jalankan timer-nya.
         </p>
       </header>
       <TreadmillTimer
