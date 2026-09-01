@@ -183,6 +183,20 @@ export async function finishTreadmill(
   revalidatePath("/history", "page");
 }
 
+/** Skip / batal-skip sebuah hari (YYYY-MM-DD). Jadwal PPL minggu itu digeser. */
+export async function toggleSkipDay(dateISO: string) {
+  const [y, m, d] = dateISO.split("-").map(Number);
+  const date = new Date(y, m - 1, d, 12, 0, 0);
+  const existing = await db.skippedDay.findUnique({ where: { date } });
+  if (existing) {
+    await db.skippedDay.delete({ where: { id: existing.id } });
+  } else {
+    await db.skippedDay.create({ data: { date } });
+  }
+  revalidatePath("/", "page");
+  revalidatePath("/plan", "page");
+}
+
 export async function deleteWorkoutSession(id: string) {
   await db.workoutSession.delete({ where: { id } });
   revalidatePath("/history", "page");

@@ -7,13 +7,15 @@ import {
   Timer,
 } from "lucide-react";
 import { db } from "@/lib/db";
-import { treadmillSuggestion } from "@/lib/actions";
+import { toggleSkipDay, treadmillSuggestion } from "@/lib/actions";
 import {
   CATEGORY_LABEL,
   DAY_NAMES_ID,
+  effectiveDayKey,
+  isoLocal,
   mondayIndex,
+  mondayOf,
   startOfToday,
-  todayDayKey,
 } from "@/lib/schedule";
 import { buttonVariants } from "@/components/ui/button";
 
@@ -32,10 +34,19 @@ const CATEGORY_ACCENT: Record<string, string> = {
 
 export default async function TodayPage() {
   const now = new Date();
-  const dayKey = todayDayKey(now);
+  const todayISO = isoLocal(now);
   const dayName = DAY_NAMES_ID[mondayIndex(now)];
   const start = startOfToday(now);
   const end = new Date(start.getTime() + 86400000);
+
+  const weekStart = mondayOf(now);
+  const weekEnd = new Date(weekStart.getTime() + 7 * 86400000);
+  const skippedRows = await db.skippedDay.findMany({
+    where: { date: { gte: weekStart, lt: weekEnd } },
+  });
+  const skippedSet = new Set(skippedRows.map((r) => isoLocal(r.date)));
+  const isSkippedToday = skippedSet.has(todayISO);
+  const dayKey = effectiveDayKey(now, skippedSet);
 
   const day = dayKey
     ? await db.workoutDay.findUnique({
@@ -134,7 +145,7 @@ export default async function TodayPage() {
                 ))}
               </ol>
 
-              <div className="p-6 pt-4">
+              <div className="space-y-2 p-6 pt-4">
                 <Link
                   href={`/workout/${day.key}`}
                   className={buttonVariants({
@@ -145,6 +156,14 @@ export default async function TodayPage() {
                   {session ? "Lanjutkan Sesi" : "Mulai Sesi"}
                   <ArrowRight className="size-5" />
                 </Link>
+                <form action={toggleSkipDay.bind(null, todayISO)}>
+                  <button
+                    type="submit"
+                    className="w-full rounded-lg py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+                  >
+                    Lewati hari ini (sakit / istirahat) — jadwal geser ke besok
+                  </button>
+                </form>
               </div>
             </>
           ) : (
@@ -152,11 +171,24 @@ export default async function TodayPage() {
               <span className="grid size-14 place-items-center rounded-2xl bg-muted">
                 <Moon className="size-7 text-muted-foreground" />
               </span>
-              <h2 className="text-2xl font-semibold">Hari Istirahat</h2>
+              <h2 className="text-2xl font-semibold">
+                {isSkippedToday ? "Hari Ini Dilewati" : "Hari Istirahat"}
+              </h2>
               <p className="max-w-sm text-muted-foreground">
-                Tidak ada latihan beban hari ini. Fokus pemulihan, mobility
-                ringan, dan tidur yang cukup. Treadmill ringan tetap boleh.
+                {isSkippedToday
+                  ? "Kamu melewati hari ini. Latihan yang seharusnya hari ini bergeser ke besok, dan seterusnya sampai Minggu. Senin kembali normal."
+                  : "Tidak ada latihan beban hari ini. Fokus pemulihan, mobility ringan, dan tidur yang cukup. Treadmill ringan tetap boleh."}
               </p>
+              {isSkippedToday && (
+                <form action={toggleSkipDay.bind(null, todayISO)}>
+                  <button
+                    type="submit"
+                    className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-muted"
+                  >
+                    Batalkan — jalankan latihan hari ini
+                  </button>
+                </form>
+              )}
             </div>
           )}
         </section>

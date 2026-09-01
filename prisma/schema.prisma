@@ -71,6 +71,11 @@ model SetLog {
   @@unique([sessionId, exerciseId, setNumber])
 }
 
+model SkippedDay {
+  id   String   @id @default(cuid())
+  date DateTime @unique // hari yang di-skip; jadwal PPL digeser mengisi hari berikutnya
+}
+
 model TreadmillSession {
   id         String    @id @default(cuid())
   date       DateTime  @default(now())
