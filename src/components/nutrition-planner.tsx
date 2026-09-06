@@ -42,9 +42,26 @@ export function NutritionPlanner() {
   const perMeal = useMemo(
     () =>
       MEALS.map((meal) => {
-        const rows = meal.slots.map((slot) =>
-          resolveSlot(slot, choice[slot.id]),
-        );
+        // protein dari slot yang di-skip dibagi rata (proporsional) ke slot protein lain
+        const pSlots = meal.slots.filter((s) => s.kind === "protein") as Extract<
+          (typeof meal.slots)[number],
+          { kind: "protein" }
+        >[];
+        const isSkip = (id: string) => choice[id] === "skip";
+        const spare = pSlots
+          .filter((s) => isSkip(s.id))
+          .reduce((a, s) => a + s.targetP, 0);
+        const baseSum = pSlots
+          .filter((s) => !isSkip(s.id))
+          .reduce((a, s) => a + s.targetP, 0);
+
+        const rows = meal.slots.map((slot) => {
+          let eff: number | undefined;
+          if (slot.kind === "protein" && !isSkip(slot.id) && baseSum > 0) {
+            eff = slot.targetP + spare * (slot.targetP / baseSum);
+          }
+          return resolveSlot(slot, choice[slot.id], eff);
+        });
         return { meal, rows, total: sumMacro(rows.map((x) => x.macro)) };
       }),
     [choice],
@@ -82,8 +99,11 @@ export function NutritionPlanner() {
           ))}
         </div>
         <p className="mt-3 text-xs text-muted-foreground">
-          Ganti bahan sesukamu di dropdown — <b>protein tiap slot dijaga tetap</b>,
-          porsi & kalori dihitung ulang otomatis. Pilihanmu tersimpan di HP ini.
+          Ganti bahan di dropdown — porsi & kalori dihitung ulang otomatis, dan{" "}
+          <b>total protein per makan tetap</b>. Pilih{" "}
+          <b>&ldquo;— tidak dipakai&rdquo;</b> untuk melewati satu bahan;
+          proteinnya otomatis pindah ke bahan lain di makan itu (mis. skip tahu →
+          gram ayam &amp; telur naik). Pilihanmu tersimpan di HP ini.
         </p>
       </div>
 
@@ -113,7 +133,12 @@ export function NutritionPlanner() {
                     ? CARB_FOODS
                     : null;
               return (
-                <li key={row.slotId} className="flex items-center gap-3 p-4">
+                <li
+                  key={row.slotId}
+                  className={`flex items-center gap-3 p-4 ${
+                    row.foodId === "skip" ? "opacity-50" : ""
+                  }`}
+                >
                   <div className="min-w-0 flex-1">
                     {opts ? (
                       <select
@@ -131,6 +156,7 @@ export function NutritionPlanner() {
                             {f.name}
                           </option>
                         ))}
+                        <option value="skip">— tidak dipakai</option>
                       </select>
                     ) : (
                       <p className="text-sm font-medium">{row.foodName}</p>

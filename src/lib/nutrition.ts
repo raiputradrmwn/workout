@@ -115,8 +115,18 @@ const scale = (m: Macro, g: number): Macro => ({
   f: (m.f * g) / 100,
 });
 
-/** Hitung porsi sebuah slot untuk food terpilih, dengan menjaga target protein/karbo. */
-export function resolveSlot(slot: Slot, foodId?: string): SlotResult {
+const ZERO: Macro = { kcal: 0, p: 0, c: 0, f: 0 };
+
+/**
+ * Hitung porsi sebuah slot untuk food terpilih, menjaga target protein/karbo.
+ * `effTarget` menimpa targetP/targetC (untuk redistribusi saat slot lain di-skip).
+ * `foodId === "skip"` → slot tidak dipakai.
+ */
+export function resolveSlot(
+  slot: Slot,
+  foodId?: string,
+  effTarget?: number,
+): SlotResult {
   if (slot.kind === "fixed") {
     return {
       slotId: slot.id,
@@ -127,6 +137,18 @@ export function resolveSlot(slot: Slot, foodId?: string): SlotResult {
       macro: slot.macro,
     };
   }
+
+  if (foodId === "skip") {
+    return {
+      slotId: slot.id,
+      foodId: "skip",
+      foodName: "—",
+      amount: "tidak dipakai",
+      grams: 0,
+      macro: ZERO,
+    };
+  }
+
   const food = FOOD_BY_ID.get(foodId ?? slot.def) ?? FOOD_BY_ID.get(slot.def)!;
 
   // FUKUMI: selalu per sachet, karbo ~0
@@ -144,7 +166,8 @@ export function resolveSlot(slot: Slot, foodId?: string): SlotResult {
   }
 
   const key = slot.kind === "protein" ? "p" : "c";
-  const target = slot.kind === "protein" ? slot.targetP : slot.targetC;
+  const baseTarget = slot.kind === "protein" ? slot.targetP : slot.targetC;
+  const target = effTarget ?? baseTarget;
   const per = food.per100[key];
   let grams = per > 0 ? (target * 100) / per : 0;
 
