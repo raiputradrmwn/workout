@@ -2,12 +2,19 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, Dumbbell, Footprints, History } from "lucide-react";
+import {
+  Apple,
+  CalendarDays,
+  Dumbbell,
+  Footprints,
+  History,
+} from "lucide-react";
 
 const items = [
   { href: "/", label: "Hari Ini", icon: Dumbbell },
   { href: "/plan", label: "Jadwal", icon: CalendarDays },
   { href: "/treadmill", label: "Treadmill", icon: Footprints },
+  { href: "/nutrisi", label: "Nutrisi", icon: Apple },
   { href: "/history", label: "Riwayat", icon: History },
 ];
 
