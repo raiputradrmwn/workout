@@ -1,10 +1,10 @@
 import { NutritionPlanner } from "@/components/nutrition-planner";
-import { CARB_FOODS, PROTEIN_FOODS } from "@/lib/nutrition";
+import { CARB_FOODS, FRUIT_FOODS, PROTEIN_FOODS } from "@/lib/nutrition";
 
 export const metadata = { title: "Nutrisi" };
 
 export default function NutrisiPage() {
-  const foods = [...PROTEIN_FOODS, ...CARB_FOODS];
+  const foods = [...PROTEIN_FOODS, ...CARB_FOODS, ...FRUIT_FOODS];
 
   return (
     <div className="mx-auto max-w-2xl space-y-8">
@@ -43,6 +43,28 @@ export default function NutrisiPage() {
           <li>Kuning telur jangan dibuang. Sayur ≥ 400 g/hari. Air 3–3,5 L.</li>
           <li>
             Tanpa ikan → pertimbangkan multivitamin, variasikan warna sayur.
+          </li>
+        </ul>
+      </section>
+
+      <section className="card-shadow space-y-3 rounded-2xl border bg-card p-5">
+        <h2 className="text-base font-semibold">Ayam: fillet vs bertulang</h2>
+        <ul className="list-disc space-y-1.5 pl-5 text-sm text-muted-foreground">
+          <li>
+            <b>Dada / paha fillet</b> — tanpa tulang & kulit. Timbang <b>matang</b>,
+            angka gram di template langsung dipakai.
+          </li>
+          <li>
+            <b>Paha bawah bertulang</b> — dihitung per <b>buah</b>. 1 buah ≈ 90 g
+            matang bertulang ≈ <b>50 g daging bersih</b> ≈ 13 g protein. Atau timbang
+            matang bertulang &amp; berkulit lalu <b>kali 0,55</b>.
+          </li>
+          <li>
+            <b>Buang kulitnya</b> — kulit menambah ±45 kkal per paha.
+          </li>
+          <li>
+            Per gram protein, paha ±26% lebih padat kalori daripada dada; kalau
+            banyak ganti ke paha, kurangi minyak tumis atau nasi sedikit.
           </li>
         </ul>
       </section>
@@ -88,6 +110,8 @@ export default function NutrisiPage() {
                   <td className="p-3 font-medium">
                     {f.name}
                     {f.unit === "sachet" && " (1 sachet ≈ 40 g)"}
+                    {f.unit === "buah" && " (per 100 g daging bersih · 1 buah ≈ 50 g)"}
+                    {f.serve && ` (porsi: ${f.serve.label} ≈ ${f.serve.g} g)`}
                   </td>
                   <td className="p-3 text-right tabular-nums">{f.per100.kcal}</td>
                   <td className="p-3 text-right tabular-nums">{f.per100.p} g</td>

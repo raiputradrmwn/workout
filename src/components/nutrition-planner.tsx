@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { RotateCcw } from "lucide-react";
 import {
   CARB_FOODS,
+  FRUIT_FOODS,
   DAILY_TARGET,
   MEALS,
   OPTIONAL_ADDONS,
@@ -131,7 +132,9 @@ export function NutritionPlanner() {
                   ? PROTEIN_FOODS
                   : slot.kind === "carb"
                     ? CARB_FOODS
-                    : null;
+                    : slot.kind === "fruit"
+                      ? FRUIT_FOODS
+                      : null;
               return (
                 <li
                   key={row.slotId}

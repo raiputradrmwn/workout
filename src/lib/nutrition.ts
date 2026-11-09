@@ -5,13 +5,35 @@ export type Food = {
   id: string;
   name: string;
   per100: Macro;
-  unit?: "butir" | "sachet";
+  /** butir/sachet: berat 1 unit utuh. buah: gram DAGING BERSIH per 1 buah (paha bertulang). */
+  unit?: "butir" | "sachet" | "buah";
   unitG?: number;
+  /** porsi tetap (buah-buahan) */
+  serve?: { g: number; label: string };
   note?: string;
 };
 
 export const PROTEIN_FOODS: Food[] = [
-  { id: "ayam", name: "Dada ayam", per100: { kcal: 165, p: 31, c: 0, f: 3.6 } },
+  {
+    id: "ayam", // id lama dipertahankan (pilihan tersimpan di localStorage)
+    name: "Dada ayam fillet",
+    per100: { kcal: 165, p: 31, c: 0, f: 3.6 },
+    note: "tanpa tulang & kulit",
+  },
+  {
+    id: "paha-fillet",
+    name: "Paha ayam fillet",
+    per100: { kcal: 209, p: 26, c: 0, f: 10.9 },
+    note: "tanpa tulang & kulit",
+  },
+  {
+    id: "paha-tulang",
+    name: "Paha bawah bertulang",
+    per100: { kcal: 175, p: 26, c: 0, f: 7 },
+    unit: "buah",
+    unitG: 50,
+    note: "tanpa kulit · 1 buah ≈ 90 g matang bertulang",
+  },
   {
     id: "telur",
     name: "Telur",
@@ -38,13 +60,43 @@ export const CARB_FOODS: Food[] = [
   },
 ];
 
+export const FRUIT_FOODS: Food[] = [
+  {
+    id: "jeruk",
+    name: "Jeruk",
+    per100: { kcal: 47, p: 0.9, c: 11.8, f: 0.1 },
+    serve: { g: 160, label: "2 buah kecil" },
+  },
+  {
+    id: "pisang",
+    name: "Pisang",
+    per100: { kcal: 89, p: 1.1, c: 22.8, f: 0.3 },
+    serve: { g: 120, label: "1 buah sedang" },
+    note: "paling padat kalori — cocok sekitar latihan",
+  },
+  {
+    id: "melon",
+    name: "Melon",
+    per100: { kcal: 34, p: 0.8, c: 8.2, f: 0.2 },
+    serve: { g: 200, label: "200 g" },
+  },
+  {
+    id: "nanas",
+    name: "Nanas",
+    per100: { kcal: 50, p: 0.5, c: 13.1, f: 0.1 },
+    serve: { g: 165, label: "1 cup potong" },
+    note: "asam — hindari tepat sebelum tidur",
+  },
+];
+
 export const FOOD_BY_ID = new Map(
-  [...PROTEIN_FOODS, ...CARB_FOODS].map((f) => [f.id, f]),
+  [...PROTEIN_FOODS, ...CARB_FOODS, ...FRUIT_FOODS].map((f) => [f.id, f]),
 );
 
 export type Slot =
   | { id: string; kind: "protein"; label: string; targetP: number; def: string }
   | { id: string; kind: "carb"; label: string; targetC: number; def: string }
+  | { id: string; kind: "fruit"; label: string; def: string }
   | { id: string; kind: "fixed"; label: string; detail: string; macro: Macro };
 
 export type Meal = { id: string; name: string; time: string; slots: Slot[] };
@@ -57,10 +109,10 @@ export const MEALS: Meal[] = [
     name: "Makan 1",
     time: "± 12:00",
     slots: [
-      { id: "m1p1", kind: "protein", label: "Protein utama", targetP: 78, def: "ayam" },
+      { id: "m1p1", kind: "protein", label: "Ayam", targetP: 78, def: "ayam" },
       { id: "m1p2", kind: "protein", label: "Protein 2", targetP: 13, def: "telur" },
       { id: "m1p3", kind: "protein", label: "Protein 3", targetP: 15, def: "tempe" },
-      { id: "m1c", kind: "carb", label: "Karbo", targetC: 49, def: "nasi" },
+      { id: "m1c", kind: "carb", label: "Nasi", targetC: 29.4, def: "nasi" },
       {
         id: "m1v",
         kind: "fixed",
@@ -75,11 +127,12 @@ export const MEALS: Meal[] = [
     name: "Makan 2",
     time: "± 18:00",
     slots: [
-      { id: "m2p1", kind: "protein", label: "Protein utama", targetP: 56, def: "ayam" },
+      { id: "m2p1", kind: "protein", label: "Ayam", targetP: 56, def: "ayam" },
       { id: "m2p2", kind: "protein", label: "Protein 2", targetP: 7, def: "telur" },
       { id: "m2p3", kind: "protein", label: "Protein 3", targetP: 16, def: "tahu" },
-      { id: "m2c1", kind: "carb", label: "Karbo ringan", targetC: 2, def: "fukumi" },
-      { id: "m2c2", kind: "carb", label: "Karbo", targetC: 35, def: "kentang" },
+      { id: "m2n", kind: "carb", label: "Nasi", targetC: 29.4, def: "nasi" },
+      { id: "m2f", kind: "carb", label: "FUKUMI (opsional)", targetC: 2, def: "fukumi" },
+      { id: "m2fr", kind: "fruit", label: "Buah (1 porsi)", def: "jeruk" },
       {
         id: "m2v",
         kind: "fixed",
@@ -93,8 +146,8 @@ export const MEALS: Meal[] = [
 
 export const OPTIONAL_ADDONS = [
   "Telur rebus 2 butir (+13 g protein, ~155 kkal)",
-  "Dada ayam 100 g (+31 g protein, ~165 kkal)",
-  "Kentang rebus 100 g (~87 kkal) — untuk hari latihan / sebelum shift malam",
+  "Dada ayam fillet 100 g (+31 g protein, ~165 kkal)",
+  "Pisang 1 buah sedang (~107 kkal, 27 g karbo) — hari latihan / sebelum shift malam",
 ];
 
 export type SlotResult = {
@@ -107,6 +160,7 @@ export type SlotResult = {
   note?: string;
 };
 
+const ZERO: Macro = { kcal: 0, p: 0, c: 0, f: 0 };
 const round5 = (n: number) => Math.max(5, Math.round(n / 5) * 5);
 const scale = (m: Macro, g: number): Macro => ({
   kcal: (m.kcal * g) / 100,
@@ -114,8 +168,6 @@ const scale = (m: Macro, g: number): Macro => ({
   c: (m.c * g) / 100,
   f: (m.f * g) / 100,
 });
-
-const ZERO: Macro = { kcal: 0, p: 0, c: 0, f: 0 };
 
 /**
  * Hitung porsi sebuah slot untuk food terpilih, menjaga target protein/karbo.
@@ -151,6 +203,20 @@ export function resolveSlot(
 
   const food = FOOD_BY_ID.get(foodId ?? slot.def) ?? FOOD_BY_ID.get(slot.def)!;
 
+  // Buah: porsi tetap
+  if (slot.kind === "fruit") {
+    const s = food.serve ?? { g: 100, label: "100 g" };
+    return {
+      slotId: slot.id,
+      foodId: food.id,
+      foodName: food.name,
+      amount: `${s.label} (±${s.g} g)`,
+      grams: s.g,
+      macro: scale(food.per100, s.g),
+      note: food.note,
+    };
+  }
+
   // FUKUMI: selalu per sachet, karbo ~0
   if (food.unit === "sachet") {
     const g = food.unitG ?? 40;
@@ -172,10 +238,12 @@ export function resolveSlot(
   let grams = per > 0 ? (target * 100) / per : 0;
 
   let amount: string;
-  if (food.unit === "butir") {
-    const n = Math.max(1, Math.round(grams / (food.unitG ?? 50)));
-    grams = n * (food.unitG ?? 50);
-    amount = `${n} butir`;
+  if (food.unit === "butir" || food.unit === "buah") {
+    const u = food.unitG ?? 50;
+    const n = Math.max(1, Math.round(grams / u));
+    grams = n * u;
+    amount =
+      food.unit === "buah" ? `${n} buah · ±${grams} g daging` : `${n} butir`;
   } else {
     grams = round5(grams);
     amount = `${grams} g`;
