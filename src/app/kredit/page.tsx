@@ -5,14 +5,14 @@ export const metadata = { title: "Kredit & Lisensi" };
 export default function KreditPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <header className="space-y-1">
-        <p className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
+      <header className="rise rounded-3xl bg-ink p-6 text-white sm:p-8">
+        <p className="text-sm font-semibold text-volt">
           Atribusi
         </p>
-        <h1 className="text-3xl font-semibold">Kredit &amp; Lisensi</h1>
+        <h1 className="display mt-2 text-5xl sm:text-7xl">Kredit &amp; Lisensi</h1>
       </header>
 
-      <section className="card-shadow space-y-3 rounded-2xl border bg-card p-6">
+      <section className="space-y-3 rounded-sm border bg-card p-6">
         <h2 className="text-lg font-semibold">Foto gerakan</h2>
         <p className="text-sm leading-relaxed text-muted-foreground">
           Foto demonstrasi gerakan diambil dari{" "}
@@ -48,7 +48,7 @@ export default function KreditPage() {
         </div>
       </section>
 
-      <section className="card-shadow space-y-2 rounded-2xl border bg-card p-6 text-sm leading-relaxed text-muted-foreground">
+      <section className="space-y-2 rounded-sm border bg-card p-6 text-sm leading-relaxed text-muted-foreground">
         <h2 className="text-lg font-semibold text-foreground">Video demo</h2>
         <p>
           Tombol &ldquo;Video demo&rdquo; membuka hasil pencarian YouTube di tab

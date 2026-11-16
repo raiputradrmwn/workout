@@ -8,12 +8,12 @@ export default function NutrisiPage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-8">
-      <header className="space-y-1">
-        <p className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
+      <header className="rise rounded-3xl bg-ink p-6 text-white sm:p-8">
+        <p className="text-sm font-semibold text-volt">
           Pola makan
         </p>
-        <h1 className="text-3xl font-semibold sm:text-4xl">Nutrisi</h1>
-        <p className="text-muted-foreground">
+        <h1 className="display mt-2 text-5xl sm:text-7xl">Nutrisi</h1>
+        <p className="mt-3 text-white/75">
           Template 2 makan · defisit ~800 kkal · protein tinggi. Bahan bisa
           diganti tanpa kehilangan protein.
         </p>
@@ -21,7 +21,7 @@ export default function NutrisiPage() {
 
       <NutritionPlanner />
 
-      <section className="card-shadow space-y-3 rounded-2xl border bg-card p-5">
+      <section className="space-y-3 rounded-sm border bg-card p-5">
         <h2 className="text-base font-semibold">Prinsip</h2>
         <ul className="list-disc space-y-1.5 pl-5 text-sm text-muted-foreground">
           <li>
@@ -47,7 +47,7 @@ export default function NutrisiPage() {
         </ul>
       </section>
 
-      <section className="card-shadow space-y-3 rounded-2xl border bg-card p-5">
+      <section className="space-y-3 rounded-sm border bg-card p-5">
         <h2 className="text-base font-semibold">Ayam: fillet vs bertulang</h2>
         <ul className="list-disc space-y-1.5 pl-5 text-sm text-muted-foreground">
           <li>
@@ -69,7 +69,7 @@ export default function NutrisiPage() {
         </ul>
       </section>
 
-      <section className="card-shadow space-y-3 rounded-2xl border bg-card p-5">
+      <section className="space-y-3 rounded-sm border bg-card p-5">
         <h2 className="text-base font-semibold">Saat shift malam (23:00–07:00)</h2>
         <p className="text-sm text-muted-foreground">
           Window 12:00–19:00 tidak masuk. Geser jam-nya, kalori & protein tetap:
@@ -90,13 +90,13 @@ export default function NutrisiPage() {
         </ul>
       </section>
 
-      <section className="card-shadow overflow-hidden rounded-2xl border bg-card">
+      <section className="overflow-hidden rounded-sm border bg-card">
         <h2 className="border-b p-4 text-base font-semibold">
           Referensi bahan (per 100 g)
         </h2>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="text-left text-xs uppercase tracking-wide text-muted-foreground">
+            <thead className="text-left eyebrow">
               <tr className="border-b">
                 <th className="p-3">Bahan</th>
                 <th className="p-3 text-right">Kkal</th>

@@ -17,12 +17,12 @@ export default async function TreadmillPage() {
 
   return (
     <div className="space-y-8">
-      <header className="space-y-1">
-        <p className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
+      <header className="rise rounded-3xl bg-ink p-6 text-white sm:p-8">
+        <p className="text-sm font-semibold text-volt">
           Kardio harian
         </p>
-        <h1 className="text-3xl font-semibold sm:text-4xl">Treadmill</h1>
-        <p className="text-muted-foreground">
+        <h1 className="display mt-2 text-5xl sm:text-7xl">Treadmill</h1>
+        <p className="mt-3 text-white/75">
           Pilih tanggal, isi incline / kecepatan / menit / km lalu <b>Simpan</b> —
           atau jalankan timer untuk hari ini.
         </p>

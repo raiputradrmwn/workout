@@ -73,7 +73,7 @@ export function NutritionPlanner() {
   return (
     <div className="space-y-6">
       {/* target vs total */}
-      <div className="card-shadow rounded-2xl border bg-card p-5">
+      <div className="rounded-sm border bg-card p-5">
         <div className="grid grid-cols-3 gap-3 text-center">
           {(
             [
@@ -82,8 +82,8 @@ export function NutritionPlanner() {
               ["Karbo", dayTotal.c, DAILY_TARGET.c, "g"],
             ] as const
           ).map(([label, val, target, unit]) => (
-            <div key={label} className="rounded-xl bg-muted/60 p-3">
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">
+            <div key={label} className="rounded-sm bg-muted/60 p-3">
+              <p className="eyebrow">
                 {label}
               </p>
               <p className="mt-1 text-xl font-semibold tabular-nums">
@@ -111,7 +111,7 @@ export function NutritionPlanner() {
       {perMeal.map(({ meal, rows, total }) => (
         <section
           key={meal.id}
-          className="card-shadow overflow-hidden rounded-2xl border bg-card"
+          className="overflow-hidden rounded-sm border bg-card"
         >
           <div className="flex items-baseline justify-between border-b p-4">
             <h2 className="text-lg font-semibold">
@@ -180,7 +180,7 @@ export function NutritionPlanner() {
         </section>
       ))}
 
-      <section className="card-shadow rounded-2xl border bg-card p-5">
+      <section className="rounded-sm border bg-card p-5">
         <h2 className="text-base font-semibold">Opsional (kalau lapar)</h2>
         <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
           {OPTIONAL_ADDONS.map((o) => (

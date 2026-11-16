@@ -1,50 +1,59 @@
-import type { Metadata } from "next";
-import Link from "next/link";
-import { Geist, Geist_Mono } from "next/font/google";
-import { Dumbbell } from "lucide-react";
-import { MainNav } from "@/components/main-nav";
+import type { Metadata, Viewport } from "next";
+import { cookies } from "next/headers";
+import { Anton, Barlow, Barlow_Condensed, Oswald, Space_Grotesk } from "next/font/google";
+import { readPrefs } from "@/lib/prefs";
+import { BottomNav, TopBar } from "@/components/main-nav";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
-const geistSans = Geist({ variable: "--font-sans", subsets: ["latin"] });
-const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
+const barlow = Barlow({
+  variable: "--font-barlow",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+const barlowCondensed = Barlow_Condensed({
+  variable: "--font-barlow-condensed",
+  subsets: ["latin"],
+  weight: ["600", "700", "800"],
+  style: ["normal", "italic"],
+});
+
+const anton = Anton({ variable: "--font-anton", subsets: ["latin"], weight: "400" });
+const oswald = Oswald({ variable: "--font-oswald", subsets: ["latin"], weight: ["600", "700"] });
+const grotesk = Space_Grotesk({ variable: "--font-grotesk", subsets: ["latin"], weight: ["700"] });
 
 export const metadata: Metadata = {
-  title: "PPL Trainer",
-  description: "Jadwal Push / Pull / Legs, set logger, dan rest timer.",
+  title: "Logbook",
+  description: "Program latihan, catatan set, progressive overload, dan rest timer.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export const viewport: Viewport = {
+  themeColor: "#f2f2ee",
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const p = readPrefs(await cookies());
   return (
     <html
       lang="id"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      data-style={p.style}
+      data-accent={p.accent}
+      data-mode={p.mode}
+      data-font={p.font}
+      data-size={p.size}
+      data-motion={p.motion}
+      className={`${barlow.variable} ${barlowCondensed.variable} ${anton.variable} ${oswald.variable} ${grotesk.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-background text-foreground">
-        <header className="sticky top-0 z-20 border-b border-border/80 bg-background/85 backdrop-blur-md">
-          <div className="mx-auto flex h-16 w-full max-w-[1600px] items-center gap-4 px-4 sm:px-6 lg:px-10">
-            <Link href="/" className="flex items-center gap-2.5">
-              <span className="grid size-9 place-items-center rounded-xl bg-primary text-primary-foreground">
-                <Dumbbell className="size-5" />
-              </span>
-              <span className="text-lg font-semibold tracking-tight">
-                PPL Trainer
-              </span>
-            </Link>
-            <div className="ml-auto">
-              <MainNav />
-            </div>
-          </div>
-        </header>
-        <main className="mx-auto w-full max-w-[1600px] flex-1 px-4 py-8 sm:px-6 lg:px-10 lg:py-10">
+        <TopBar />
+        <main className="mx-auto w-full max-w-6xl flex-1 px-4 pt-6 pb-32 sm:px-6 lg:pt-10 lg:pb-16">
           {children}
         </main>
-        <footer className="border-t border-border/80 py-4 text-center text-xs text-muted-foreground">
-          <Link href="/kredit" className="hover:text-foreground hover:underline">
-            Kredit &amp; lisensi
-          </Link>
-        </footer>
-        <Toaster richColors position="top-center" />
+        <BottomNav />
+        <Toaster position="top-center" />
       </body>
     </html>
   );

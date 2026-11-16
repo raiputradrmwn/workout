@@ -1,6 +1,4 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
 import { buildSessionView } from "@/lib/session-view";
 import { SessionRunner } from "@/components/session-runner";
 
@@ -23,12 +21,6 @@ export default async function SessionEditPage({
 
   return (
     <div className="space-y-4">
-      <Link
-        href="/history"
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft className="size-4" /> Riwayat
-      </Link>
       <p className="text-sm text-muted-foreground">
         Edit sesi &middot; {fmt.format(view.session.date)}
       </p>

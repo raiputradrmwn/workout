@@ -22,11 +22,24 @@ export function ExerciseDemo({
 }) {
   const { youtubeEmbed, wger, muscle } = mediaFor(name);
 
+  if (!youtubeEmbed && wger.length === 0) {
+    return (
+      <a
+        href={`https://www.youtube.com/results?search_query=${encodeURIComponent(name + " form")}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex h-9 shrink-0 items-center rounded-full bg-muted px-3 text-xs font-bold hover:bg-ink hover:text-white"
+      >
+        Video ↗
+      </a>
+    );
+  }
+
   return (
     <Dialog>
       <DialogTrigger
         aria-label={`Lihat demo gerakan ${name}`}
-        className={`group relative grid size-16 shrink-0 place-items-center overflow-hidden rounded-xl border bg-muted/40 transition-colors hover:border-primary ${className ?? ""}`}
+        className={`group relative grid size-14 shrink-0 place-items-center overflow-hidden rounded-xl border bg-white transition-colors hover:border-ink ${className ?? ""}`}
       >
         {wger[0] ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -35,12 +48,12 @@ export function ExerciseDemo({
             alt=""
             loading="lazy"
             referrerPolicy="no-referrer"
-            className="size-full object-cover"
+            className="size-full object-cover bg-white grayscale"
           />
         ) : (
-          <Play className="size-6 fill-primary text-primary" />
+          <Play className="size-5 fill-foreground" />
         )}
-        <span className="absolute inset-0 grid place-items-center bg-foreground/25 opacity-0 transition-opacity group-hover:opacity-100">
+        <span className="absolute inset-0 grid place-items-center bg-foreground/40 opacity-0 transition-opacity group-hover:opacity-100">
           <Play className="size-6 fill-white text-white" />
         </span>
       </DialogTrigger>
@@ -49,7 +62,7 @@ export function ExerciseDemo({
         <DialogTitle>{name}</DialogTitle>
 
         {youtubeEmbed ? (
-          <div className="aspect-video w-full overflow-hidden rounded-xl border bg-black">
+          <div className="aspect-video w-full overflow-hidden border bg-black">
             <iframe
               src={youtubeEmbed}
               title={`Demo ${name}`}
@@ -72,7 +85,7 @@ export function ExerciseDemo({
                   alt={`${name} — pose`}
                   loading="lazy"
                   referrerPolicy="no-referrer"
-                  className="aspect-square w-full rounded-xl border bg-muted/30 object-contain"
+                  className="aspect-square w-full border bg-white object-contain"
                 />
               ))}
             </div>

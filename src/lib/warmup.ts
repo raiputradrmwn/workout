@@ -46,10 +46,23 @@ export const CATEGORY_WARMUP: Record<"PUSH" | "PULL" | "LEGS", Drill[]> = {
   ],
 };
 
+const COMBO: Record<string, (keyof typeof CATEGORY_WARMUP)[]> = {
+  UPPER: ["PUSH", "PULL"],
+  LOWER: ["LEGS"],
+  FULL: ["LEGS", "PUSH"],
+};
+
 export function warmupFor(category: string): Drill[] {
-  const extra =
-    category in CATEGORY_WARMUP
-      ? CATEGORY_WARMUP[category as keyof typeof CATEGORY_WARMUP]
-      : [];
+  const cats =
+    COMBO[category] ??
+    (category in CATEGORY_WARMUP ? [category as keyof typeof CATEGORY_WARMUP] : []);
+  const seen = new Set<string>();
+  const extra: Drill[] = [];
+  for (const c of cats)
+    for (const d of CATEGORY_WARMUP[c])
+      if (!seen.has(d.name + d.detail)) {
+        seen.add(d.name + d.detail);
+        extra.push(d);
+      }
   return [...GENERAL_WARMUP, ...extra];
 }

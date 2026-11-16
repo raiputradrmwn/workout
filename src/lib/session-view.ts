@@ -1,6 +1,8 @@
 import { db } from "@/lib/db";
 import { lastPerformanceMany } from "@/lib/actions";
-import { alternativesFor } from "@/lib/exercise-alternatives";
+import { alternativesFor, libraryEntry } from "@/lib/library";
+import { programForDay, supersetOf } from "@/lib/programs";
+import { suggestNext } from "@/lib/progression";
 import type { RunnerExercise } from "@/components/session-runner";
 
 /** Bangun data yang dipakai SessionRunner untuk satu WorkoutSession. */
@@ -22,16 +24,14 @@ export async function buildSessionView(sessionId: string) {
   if (!session) return null;
 
   const day = session.day;
+  const scheme = programForDay(day.key)?.scheme ?? "double";
   const swaps = (session.swaps as Record<string, string> | null) ?? {};
 
-  const altNames = new Set<string>();
-  for (const de of day.exercises)
-    for (const n of alternativesFor(de.exercise.name)) altNames.add(n);
-  const altRows = altNames.size
-    ? await db.exercise.findMany({ where: { name: { in: [...altNames] } } })
+  const swappedIds = Object.values(swaps);
+  const swappedRows = swappedIds.length
+    ? await db.exercise.findMany({ where: { id: { in: swappedIds } } })
     : [];
-  const byName = new Map(altRows.map((e) => [e.name, e]));
-  const byId = new Map(altRows.map((e) => [e.id, e]));
+  const byId = new Map(swappedRows.map((e) => [e.id, e]));
   for (const de of day.exercises) byId.set(de.exercise.id, de.exercise);
 
   const effectiveIds = day.exercises.map((de) => swaps[de.id] ?? de.exerciseId);
@@ -40,25 +40,34 @@ export async function buildSessionView(sessionId: string) {
   const exercises: RunnerExercise[] = day.exercises.map((de) => {
     const effId = swaps[de.id] ?? de.exerciseId;
     const ex = byId.get(effId) ?? de.exercise;
-    const alts = alternativesFor(de.exercise.name)
-      .map((n) => byName.get(n))
-      .filter((e): e is NonNullable<typeof e> => !!e)
-      .map((e) => ({ id: e.id, name: e.name }));
+    const lib = libraryEntry(ex.name);
+    const last = lastByExercise[effId] ?? null;
+    const alts = alternativesFor(de.exercise.name);
     return {
       dayExerciseId: de.id,
       exerciseId: ex.id,
       name: ex.name,
       muscles: ex.muscles,
-      cues: ex.cues,
+      cues: lib?.cues ?? [ex.cues],
+      avoid: lib?.avoid ?? null,
       equipment: ex.equipment,
       order: de.order,
+      superset: supersetOf(day.key, de.order, de.exercise.name),
       targetSets: de.targetSets,
       targetReps: de.targetReps,
       restSeconds: de.restSeconds,
-      suggestWeight: de.suggestWeight,
-      suggestReps: de.suggestReps,
       alternatives: alts.length > 1 ? alts : [],
-      last: lastByExercise[effId] ?? null,
+      last,
+      suggestion: suggestNext({
+        equipment: ex.equipment,
+        category: ex.category,
+        compound: lib?.compound ?? false,
+        targetReps: de.targetReps,
+        scheme,
+        last,
+        fallbackWeight: effId === de.exerciseId ? de.suggestWeight : null,
+        fallbackReps: de.suggestReps,
+      }),
       existing: session.setLogs
         .filter((l) => l.exerciseId === effId)
         .map((l) => ({
@@ -70,5 +79,5 @@ export async function buildSessionView(sessionId: string) {
     };
   });
 
-  return { session, day, exercises };
+  return { session, day, exercises, scheme };
 }

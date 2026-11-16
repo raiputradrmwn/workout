@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Minus, Pause, Play, Plus, X } from "lucide-react";
+import { Pause, Play } from "lucide-react";
 import { toast } from "sonner";
 import { playChime, vibrate } from "@/lib/audio";
 
@@ -74,7 +74,7 @@ export function RestTimer({
     if (!oncePerZeroRef.current) {
       oncePerZeroRef.current = true;
       notify(label ?? "Lanjut set berikutnya");
-      flashTitle("⏰ Istirahat selesai!");
+      flashTitle("Istirahat selesai");
       toast.success("Istirahat selesai", { description: label });
     }
     if (!running) return; // dijeda = berhenti mengganggu
@@ -100,67 +100,56 @@ export function RestTimer({
 
   return (
     <div
-      className={`fixed inset-x-0 bottom-0 z-30 border-t backdrop-blur-md ${
-        over ? "border-success bg-success/15" : "border-border bg-card/95"
-      }`}
+      role="timer"
+      aria-live="off"
+      className="rise fixed inset-x-0 bottom-[calc(72px+env(safe-area-inset-bottom))] z-30 px-3 lg:bottom-4"
     >
       <div
-        className={`h-1 transition-[width] duration-1000 ease-linear ${over ? "bg-success" : "bg-primary"}`}
-        style={{ width: `${over ? 100 : pct}%` }}
-      />
-      <div className="mx-auto flex max-w-3xl items-center gap-4 px-4 py-3.5 sm:px-6">
-        <div
-          className={`grid size-16 shrink-0 place-items-center rounded-2xl text-xl font-bold tabular-nums ${
-            over
-              ? "animate-pulse bg-success text-success-foreground"
-              : "bg-primary/10 text-primary"
-          }`}
-        >
-          {mm}:{ss.toString().padStart(2, "0")}
+        className={`mx-auto max-w-3xl overflow-hidden rounded-2xl shadow-[0_12px_40px_-12px_rgb(0_0_0/0.45)] ${
+          over ? "bg-volt text-ink" : "bg-ink text-white"
+        }`}
+      >
+        <div className="h-1.5 bg-white/15">
+          <div
+            className={`h-full transition-[width] duration-1000 ease-linear ${over ? "bg-ink" : "bg-volt"}`}
+            style={{ width: `${over ? 100 : pct}%` }}
+          />
         </div>
-        <div className="min-w-0 flex-1">
-          <p className={`text-sm font-semibold ${over ? "text-success" : ""}`}>
-            {over ? "✓ Istirahat selesai — lanjut!" : "Istirahat"}
-          </p>
-          {label && (
-            <p className="hidden truncate text-sm text-muted-foreground min-[420px]:block">
-              {label}
+        <div className="flex items-center gap-3 p-3 sm:gap-4 sm:p-4">
+          <div className={`num shrink-0 text-5xl leading-none ${over ? "animate-pulse" : ""}`}>
+            {mm}:{ss.toString().padStart(2, "0")}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-bold uppercase tracking-wide opacity-70">
+              {over ? "Gas, set berikutnya!" : running ? "Istirahat" : "Dijeda"}
             </p>
-          )}
-        </div>
-        <div className="flex shrink-0 items-center gap-1.5">
-          <button
-            onClick={() => addTime(-15)}
-            title="-15 detik"
-            className="inline-flex h-11 items-center gap-0.5 rounded-xl border border-input bg-background px-2.5 text-sm font-medium hover:bg-muted"
-          >
-            <Minus className="size-4" />
-            15
-          </button>
-          <button
-            onClick={() => addTime(15)}
-            title="+15 detik"
-            className="inline-flex h-11 items-center gap-0.5 rounded-xl border border-input bg-background px-2.5 text-sm font-medium hover:bg-muted"
-          >
-            <Plus className="size-4" />
-            15
-          </button>
-          <button
-            onClick={() => setRunning((r) => !r)}
-            title={running ? "Jeda" : "Lanjut"}
-            className="grid size-11 place-items-center rounded-xl border border-input bg-background hover:bg-muted"
-          >
-            {running ? <Pause className="size-5" /> : <Play className="size-5" />}
-          </button>
-          <button
-            onClick={onClose}
-            title="Lewati / tutup"
-            className={`grid size-11 place-items-center rounded-xl text-primary-foreground ${
-              over ? "bg-success hover:bg-success/90" : "bg-primary hover:bg-primary/90"
-            }`}
-          >
-            <X className="size-5" />
-          </button>
+            {label && <p className="truncate text-sm font-semibold">{label}</p>}
+          </div>
+          <div className="flex shrink-0 items-center gap-1.5">
+            <button
+              onClick={() => addTime(15)}
+              title="Tambah 15 detik"
+              className="num hidden h-11 rounded-xl bg-white/10 px-3 text-base min-[400px]:block"
+              style={over ? { background: "rgb(0 0 0 / 0.08)" } : undefined}
+            >
+              +15
+            </button>
+            <button
+              onClick={() => setRunning((r) => !r)}
+              aria-label={running ? "Jeda" : "Lanjut"}
+              className="grid size-11 place-items-center rounded-xl bg-white/10"
+              style={over ? { background: "rgb(0 0 0 / 0.08)" } : undefined}
+            >
+              {running ? <Pause className="size-5" /> : <Play className="size-5" />}
+            </button>
+            <button
+              onClick={onClose}
+              aria-label="Lewati istirahat"
+              className={`h-11 rounded-xl px-4 text-sm font-bold ${over ? "bg-ink text-volt" : "bg-volt text-ink"}`}
+            >
+              {over ? "Lanjut" : "Skip"}
+            </button>
+          </div>
         </div>
       </div>
     </div>

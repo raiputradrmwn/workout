@@ -72,10 +72,10 @@ export function HistoryList({ items }: { items: HistoryItem[] }) {
           return (
             <li
               key={it.id}
-              className="card-shadow rounded-2xl border bg-card p-4"
+              className="rounded-sm border bg-card p-4"
             >
               <div className="flex items-center gap-4">
-                <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-chart-2/10 text-chart-2">
+                <span className="grid size-11 shrink-0 place-items-center rounded-sm border text-foreground">
                   <Footprints className="size-5" />
                 </span>
                 <div className="min-w-0 flex-1">
@@ -128,9 +128,9 @@ export function HistoryList({ items }: { items: HistoryItem[] }) {
         return (
           <li
             key={it.id}
-            className="card-shadow flex items-center gap-4 rounded-2xl border bg-card p-4"
+            className="flex items-center gap-4 rounded-sm border bg-card p-4"
           >
-            <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+            <span className="grid size-11 shrink-0 place-items-center rounded-sm bg-primary/10 text-primary">
               <Dumbbell className="size-5" />
             </span>
             <div className="min-w-0 flex-1">
@@ -207,7 +207,7 @@ function TreadmillEdit({
       <div className="grid grid-cols-4 gap-2">
         {fields.map(([label, val, set, step]) => (
           <label key={label} className="block text-center">
-            <span className="text-xs uppercase tracking-wide text-muted-foreground">
+            <span className="eyebrow">
               {label}
             </span>
             <input
@@ -225,7 +225,7 @@ function TreadmillEdit({
       <button
         onClick={save}
         disabled={pending}
-        className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+        className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-sm bg-primary text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
       >
         <Check className="size-4" /> Simpan perubahan
       </button>

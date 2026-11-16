@@ -2,7 +2,15 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
+import type { PerfSet } from "@/lib/progression";
+import { cookies } from "next/headers";
 import { startOfToday, TREADMILL_DEFAULT } from "@/lib/schedule";
+import { programById } from "@/lib/programs";
+import {
+  ensureExercises,
+  ensureProgramDays,
+  PROGRAM_COOKIE,
+} from "@/lib/program-state";
 
 export async function getOrCreateSession(dayKey: string) {
   const day = await db.workoutDay.findUnique({ where: { key: dayKey } });
@@ -51,7 +59,7 @@ export async function upsertSet(input: {
 export async function swapExercise(
   sessionId: string,
   dayExerciseId: string,
-  exerciseId: string,
+  exerciseName: string,
 ) {
   const s = await db.workoutSession.findUniqueOrThrow({
     where: { id: sessionId },
@@ -59,17 +67,15 @@ export async function swapExercise(
   });
   const de = await db.dayExercise.findUniqueOrThrow({
     where: { id: dayExerciseId },
-    select: { dayId: true },
+    select: { dayId: true, exerciseId: true },
   });
   if (de.dayId !== s.dayId) throw new Error("Gerakan bukan bagian dari hari ini");
 
+  const ids = await ensureExercises([exerciseName]);
+  const exerciseId = ids.get(exerciseName)!;
   const swaps = { ...((s.swaps as Record<string, string> | null) ?? {}) };
-  // kalau kembali ke gerakan asli, hapus entri
-  const de2 = await db.dayExercise.findUniqueOrThrow({
-    where: { id: dayExerciseId },
-    select: { exerciseId: true },
-  });
-  if (exerciseId === de2.exerciseId) delete swaps[dayExerciseId];
+  // kembali ke gerakan asli = hapus entri
+  if (exerciseId === de.exerciseId) delete swaps[dayExerciseId];
   else swaps[dayExerciseId] = exerciseId;
 
   await db.workoutSession.update({
@@ -77,6 +83,19 @@ export async function swapExercise(
     data: { swaps },
   });
   revalidatePath("/workout/[dayKey]", "page");
+}
+
+/** Ganti program aktif. Hari-hari program dibuat di database bila belum ada. */
+export async function setProgram(programId: string) {
+  const program = programById(programId);
+  await ensureProgramDays(program);
+  const jar = await cookies();
+  jar.set(PROGRAM_COOKIE, program.id, {
+    path: "/",
+    maxAge: 60 * 60 * 24 * 365 * 2,
+    sameSite: "lax",
+  });
+  revalidatePath("/", "layout");
 }
 
 export async function finishSession(sessionId: string) {
@@ -88,7 +107,6 @@ export async function finishSession(sessionId: string) {
   revalidatePath("/history", "page");
 }
 
-type PerfSet = { setNumber: number; weightKg: number | null; reps: number | null };
 
 /**
  * Set "done" terakhir per gerakan dari sesi SEBELUM hari ini (buat patokan beban).
@@ -289,3 +307,4 @@ export async function treadmillSuggestion(): Promise<
   }
   return { incline, speed, minutes, note };
 }
+

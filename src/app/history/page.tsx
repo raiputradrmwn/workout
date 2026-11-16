@@ -67,20 +67,20 @@ export default async function HistoryPage() {
 
   return (
     <div className="space-y-8">
-      <header className="space-y-1">
-        <p className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
+      <header className="rise rounded-3xl bg-ink p-6 text-white sm:p-8">
+        <p className="text-sm font-semibold text-volt">
           Progres
         </p>
-        <h1 className="text-3xl font-semibold sm:text-4xl">Riwayat</h1>
+        <h1 className="display mt-2 text-5xl sm:text-7xl">Riwayat</h1>
       </header>
 
       <div className="grid grid-cols-3 gap-3 sm:gap-5">
         {stats.map(([k, v]) => (
           <div
             key={k}
-            className="card-shadow rounded-2xl border bg-card p-4 sm:p-5"
+            className="rounded-sm border bg-card p-4 sm:p-5"
           >
-            <p className="text-xs uppercase tracking-wide text-muted-foreground sm:text-sm">
+            <p className="eyebrow">
               {k}
             </p>
             <p className="mt-1 text-xl font-semibold tabular-nums sm:text-2xl">

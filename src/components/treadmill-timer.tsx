@@ -172,7 +172,7 @@ export function TreadmillTimer({
   ];
 
   return (
-    <div className="card-shadow mx-auto max-w-md space-y-6 rounded-3xl border bg-card p-6 sm:p-8">
+    <div className="mx-auto max-w-md space-y-6 rounded-sm border bg-card p-6 sm:p-8">
       {/* Tanggal */}
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-3">
@@ -224,7 +224,7 @@ export function TreadmillTimer({
       </div>
 
       {/* Saran */}
-      <div className="rounded-2xl bg-accent/60 p-4">
+      <div className="rounded-sm bg-accent/60 p-4">
         <p className="flex items-center gap-2 text-sm font-medium text-accent-foreground">
           <Lightbulb className="size-4" /> Saran
         </p>
@@ -253,9 +253,9 @@ export function TreadmillTimer({
         {fields.map(([label, val, unit, set, step]) => (
           <label
             key={label}
-            className="block rounded-2xl bg-muted/60 p-3 text-center"
+            className="block rounded-sm bg-muted/60 p-3 text-center"
           >
-            <span className="text-xs uppercase tracking-wide text-muted-foreground">
+            <span className="eyebrow">
               {label}
             </span>
             <input
@@ -274,7 +274,7 @@ export function TreadmillTimer({
       </div>
 
       {/* Jarak */}
-      <label className="flex items-center justify-between gap-3 rounded-2xl bg-muted/60 p-3">
+      <label className="flex items-center justify-between gap-3 rounded-sm bg-muted/60 p-3">
         <span className="text-sm text-muted-foreground">Jarak (km)</span>
         <input
           type="number"
