@@ -12,7 +12,8 @@ import {
   startOfToday,
   weekPlan,
 } from "@/lib/schedule";
-import { getActiveProgram } from "@/lib/program-state";
+import { getActiveContext } from "@/lib/program-state";
+import { applyDeload } from "@/lib/block-plan";
 import { libraryEntry } from "@/lib/library";
 import { daysPerWeek, supersetOf } from "@/lib/programs";
 import { isTimed, suggestNext } from "@/lib/progression";
@@ -37,7 +38,9 @@ export default async function TodayPage() {
   const todayIdx = mondayIndex(now);
   const start = startOfToday(now);
   const end = new Date(start.getTime() + 86400000);
-  const program = await getActiveProgram();
+  const ctx = await getActiveContext(now);
+  const program = ctx.program;
+  const deload = !!ctx.slot?.deload;
 
   const weekStart = mondayOf(now);
   const weekEnd = new Date(weekStart.getTime() + 7 * 86400000);
@@ -104,10 +107,21 @@ export default async function TodayPage() {
             className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white/80 hover:bg-white/20"
           >
             {program.name}
+            {ctx.slot && !ctx.finished && (
+              <span className="text-white/60">
+                {" "}
+                · blok {ctx.slot.blockIndex + 1}, minggu {ctx.slot.weekInBlock}/{ctx.slot.blockWeeks}
+              </span>
+            )}
           </Link>
         </div>
         <h1 className="display mt-4 text-6xl sm:text-8xl">{title}</h1>
         {focus && <p className="mt-2 text-lg font-medium text-white/80">{focus}</p>}
+        {deload && day && (
+          <p className="mt-3 inline-flex rounded-full bg-volt px-3 py-1 text-sm font-bold">
+            Minggu deload · beban ±60%, 2–3 set, pulihkan badan
+          </p>
+        )}
 
         {day ? (
           <>
@@ -193,7 +207,7 @@ export default async function TodayPage() {
               const ss = supersetOf(day.key, de.order, de.exercise.name);
               const prevSs =
                 idx > 0 ? supersetOf(day.key, day.exercises[idx - 1].order, day.exercises[idx - 1].exercise.name) : null;
-              const s = suggestNext({
+              const raw = suggestNext({
                 equipment: de.exercise.equipment,
                 category: de.exercise.category,
                 compound: lib?.compound ?? false,
@@ -203,6 +217,7 @@ export default async function TodayPage() {
                 fallbackWeight: de.suggestWeight,
                 fallbackReps: de.suggestReps,
               });
+              const s = deload ? applyDeload(raw) : raw;
               const target = `${de.targetSets}×${de.targetReps.replace(" / kaki", "").replace("maks (AMRAP)", "maks")}`;
               return (
                 <li key={de.id}>

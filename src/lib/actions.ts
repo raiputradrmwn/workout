@@ -6,6 +6,7 @@ import type { PerfSet } from "@/lib/progression";
 import { cookies } from "next/headers";
 import { startOfToday, TREADMILL_DEFAULT } from "@/lib/schedule";
 import { programById } from "@/lib/programs";
+import { parsePlan, PLAN_COOKIE, serializePlan, type BlockPlan } from "@/lib/block-plan";
 import {
   ensureExercises,
   ensureProgramDays,
@@ -308,3 +309,23 @@ export async function treadmillSuggestion(): Promise<
   return { incline, speed, minutes, note };
 }
 
+/** Simpan / hapus rencana blok (mesocycle). `null` = kembali ke program tunggal. */
+export async function savePlan(plan: BlockPlan | null) {
+  const jar = await cookies();
+  if (!plan) {
+    jar.delete(PLAN_COOKIE);
+    revalidatePath("/", "layout");
+    return;
+  }
+  const clean = parsePlan(serializePlan(plan));
+  if (!clean) throw new Error("Rencana tidak valid");
+  for (const id of new Set(clean.blocks.map((b) => b.programId))) {
+    await ensureProgramDays(programById(id));
+  }
+  jar.set(PLAN_COOKIE, serializePlan(clean), {
+    path: "/",
+    maxAge: 60 * 60 * 24 * 365 * 2,
+    sameSite: "lax",
+  });
+  revalidatePath("/", "layout");
+}

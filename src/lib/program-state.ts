@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { db } from "@/lib/db";
 import { libraryEntry, toDbRow } from "@/lib/library";
 import { programById, type Program } from "@/lib/programs";
+import { parsePlan, PLAN_COOKIE, slotFor, type BlockPlan, type WeekSlot } from "@/lib/block-plan";
 
 export const PROGRAM_COOKIE = "program";
 
@@ -64,9 +65,30 @@ export async function ensureProgramDays(program: Program) {
   }
 }
 
-export async function getActiveProgram(): Promise<Program> {
+export type ActiveContext = {
+  program: Program;
+  plan: BlockPlan | null;
+  slot: WeekSlot | null;
+  /** Rencana blok sudah lewat; program blok terakhir dipakai terus. */
+  finished: boolean;
+};
+
+/** Program aktif untuk tanggal tertentu: dari rencana blok kalau ada, kalau tidak dari pilihan tunggal. */
+export async function getActiveContext(date = new Date()): Promise<ActiveContext> {
   const jar = await cookies();
-  const program = programById(jar.get(PROGRAM_COOKIE)?.value);
+  const plan = parsePlan(jar.get(PLAN_COOKIE)?.value);
+  const hit = plan ? slotFor(plan, date) : null;
+  const program = hit ? hit.slot.program : programById(jar.get(PROGRAM_COOKIE)?.value);
   await ensureProgramDays(program);
-  return program;
+  return { program, plan, slot: hit?.slot ?? null, finished: hit?.finished ?? false };
+}
+
+export async function getActiveProgram(date = new Date()): Promise<Program> {
+  return (await getActiveContext(date)).program;
+}
+
+/** Apakah tanggal ini jatuh di minggu deload rencana blok. */
+export async function isDeloadWeek(date: Date): Promise<boolean> {
+  const plan = parsePlan((await cookies()).get(PLAN_COOKIE)?.value);
+  return !!(plan && slotFor(plan, date)?.slot.deload);
 }

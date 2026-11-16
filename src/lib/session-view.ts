@@ -3,6 +3,8 @@ import { lastPerformanceMany } from "@/lib/actions";
 import { alternativesFor, libraryEntry } from "@/lib/library";
 import { programForDay, supersetOf } from "@/lib/programs";
 import { suggestNext } from "@/lib/progression";
+import { applyDeload } from "@/lib/block-plan";
+import { isDeloadWeek } from "@/lib/program-state";
 import type { RunnerExercise } from "@/components/session-runner";
 
 /** Bangun data yang dipakai SessionRunner untuk satu WorkoutSession. */
@@ -35,7 +37,10 @@ export async function buildSessionView(sessionId: string) {
   for (const de of day.exercises) byId.set(de.exercise.id, de.exercise);
 
   const effectiveIds = day.exercises.map((de) => swaps[de.id] ?? de.exerciseId);
-  const lastByExercise = await lastPerformanceMany(effectiveIds);
+  const [lastByExercise, deload] = await Promise.all([
+    lastPerformanceMany(effectiveIds),
+    isDeloadWeek(session.date),
+  ]);
 
   const exercises: RunnerExercise[] = day.exercises.map((de) => {
     const effId = swaps[de.id] ?? de.exerciseId;
@@ -58,7 +63,7 @@ export async function buildSessionView(sessionId: string) {
       restSeconds: de.restSeconds,
       alternatives: alts.length > 1 ? alts : [],
       last,
-      suggestion: suggestNext({
+      suggestion: (deload ? applyDeload : (x: ReturnType<typeof suggestNext>) => x)(suggestNext({
         equipment: ex.equipment,
         category: ex.category,
         compound: lib?.compound ?? false,
@@ -67,7 +72,7 @@ export async function buildSessionView(sessionId: string) {
         last,
         fallbackWeight: effId === de.exerciseId ? de.suggestWeight : null,
         fallbackReps: de.suggestReps,
-      }),
+      })),
       existing: session.setLogs
         .filter((l) => l.exerciseId === effId)
         .map((l) => ({
@@ -79,5 +84,5 @@ export async function buildSessionView(sessionId: string) {
     };
   });
 
-  return { session, day, exercises, scheme };
+  return { session, day, exercises, scheme, deload };
 }
